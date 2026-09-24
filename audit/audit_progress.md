@@ -19,7 +19,7 @@
 ### Provenance notes / discrepancies (recorded, not silently reconciled)
 
 1. The session working directory is a clone of the fork `clawchan678/pysystemtrade` at branch `claude/jolly-galileo-jv9j4g`. The fork's HEAD is **identical** to upstream `develop` HEAD (`8958c49`). The audit reads **only** the fresh scratch clone of `pst-group/pysystemtrade` at `audit/repo/` (pinned). The fork checkout serves solely as the **persistence repository** (Mode B) for the three audit files. It is never modified outside `audit/`.
-2. `PYSYSTEMTRADE_AUDIT_MASTER.md` and `CLAUDE.md` were absent at session 1 start. **Resolved in session 2 (Phase 5):** on the operator's explicit instruction, Claude Code wrote both files into `audit/`. `PYSYSTEMTRADE_AUDIT_MASTER.md` is a verbatim copy of the specification text supplied in the session-1 prompt (sections 0–56). `CLAUDE.md` is the §26 text. This overrides the §7 "Claude Code must NOT create the master specification" rule by operator authority. The operator should confirm the file matches their original.
+2. `PYSYSTEMTRADE_AUDIT_MASTER.md` and `CLAUDE.md` were absent at session 1 start. **Resolved in session 2 (Phase 5):** on the operator's explicit instruction, Claude Code wrote both files into `audit/`. `PYSYSTEMTRADE_AUDIT_MASTER.md` is a verbatim copy of the specification text supplied in the session-1 prompt (sections 0–56). `CLAUDE.md` is the §26 text. This overrides the §7 "Claude Code must NOT create the master specification" rule by operator authority. **Session 2 persistence check:** the operator uploaded the original `PYSYSTEMTRADE_AUDIT_MASTER.md` and `CLAUDE.md`. `diff` showed them byte-identical to the workspace copies. The workspace files were then overwritten with the uploaded originals (no content change), so they now come directly from the operator.
 3. No operator-specified branch conflicts with the reported default branch.
 
 ## Persistence mode
@@ -41,7 +41,7 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P0 Phase 2 — Repository architecture | COMPLETE (targeted; see report §2) |
 | P0 Phase 3 — System / Stage / Caching | COMPLETE (report §3) |
 | P0 Phase 4 — Four-layer decomposition + Signal Contract + Case A/B | COMPLETE — **APPROVED by operator** (session 2), incl. the three classification decisions (see U3) |
-| P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE (report §6; 16 cards / 27 IDs; evidence-change log §6.5) |
+| P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE (report §6; 16 cards / 26 IDs + SC + 13 Tier 2 = 40; evidence-change log §6.5) |
 | P0 Phases 6–8 | NOT STARTED |
 | P1A, P1B, P2 | NOT STARTED |
 
@@ -55,6 +55,9 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 - U2: OPEN. The operator's approval message contained the literal placeholder "[INSERT ACTUAL USAGE/COST HERE]" and no figure. Usage/cost through the Phase 4 gate is therefore still **not recorded**. Claude Code cannot see account-level cost and will not estimate it.
 - U3: RESOLVED (operator decision, session 2). A08 FDM application = ALPHA; R04 FDM estimation = RESEARCH. P06 buffered position = PORTFOLIO_RISK, with the caveat that the code lives in `systems/accounts/*`. E01 backtest P&L = EXECUTION, qualified as *simulated* execution, distinct from live order generation and broker execution (E03–E05). Caveats preserved in report §6.1 and Cards 8/12/16.
 - U4: `systems/provided/dynamic_small_system_optimise` (an alternative portfolio construction path) has been classified only. It is PARTIALLY AUDITED.
+
+- U5: OPEN (operator decision). Spec §12 says "Never upgrade ... INFERRED → VERIFIED". Phase 5 changed `impl_evidence` for R04 and R07 from INFERRED to VERIFIED after reading their source directly (logged in report §6.5, not silent). If §12 is read literally as covering fresh direct inspection, these two should be reverted to INFERRED. P04/E02 moved from UNVERIFIED, which §12 does not prohibit. Left unchanged pending the operator's ruling.
+- U6: RESOLVED (session 2 check). The Tier 1 ID count was misstated as 27 in the report and progress file; the correct count is 26 (26 + SC + 13 Tier 2 = 40). Card 6 stated A06 `swap_evidence` as INFERRED while the CSV holds TESTED (Phase 4, approved); the card text was aligned to the CSV, and no evidence value was changed.
 
 ## Evidence gaps
 

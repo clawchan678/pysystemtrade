@@ -28,7 +28,7 @@ Status: **P0 Phases 1–5 complete** (Phase 4 gate approved by the operator). Ne
 16. **Stale docstrings.** `mixed_vol_calc` documents vol-floor parameters that are not implemented (`sysquant/estimators/vol.py:121-181`). Doctests reference non-existent classes (`ForecastScaleCapFixed`). The fixed forecast-scalar doctest expects a float while the method returns a Series. VERIFIED (minor).
 17. **Testing status.** Only two targeted controlled experiments (EXP-01, EXP-02) and one coercion check (EXP-03) have run. The repo test suite has not been run yet (Phase 18).
 18. **Evidence gaps (after Phase 5).** Instrument/forecast-weight optimiser internals, pooled forecast correlation, `pandl_SR_cost.py`, risk-series internals (`calc_portfolio_risk_series`), dynamic optimisation, data/roll construction and the production stack are still classified-only (see `audit_progress.md` G1–G5).
-19. **Phase 5 (inventory).** All 40 rows are tiered: 16 Tier 1 cards cover 27 IDs, 13 Tier 2 rows, and no Tier 3 rows. The Phase 5 reads found: the risk overlay is OFF by default and not documented in `docs/`; cost normalisation and SR cost per trade are anchored to the **end of the sample** (pre-flag for Phase 14); the speed limit uses a full-sample turnover and is effectively off by default (999/9999). New divergences: DV7 (default vol function and floor), DV8/DV9 (config-key names). VERIFIED.
+19. **Phase 5 (inventory).** All 40 rows are tiered: 16 Tier 1 cards cover 26 IDs, 13 Tier 2 rows, and no Tier 3 rows. The Phase 5 reads found: the risk overlay is OFF by default and not documented in `docs/`; cost normalisation and SR cost per trade are anchored to the **end of the sample** (pre-flag for Phase 14); the speed limit uses a full-sample turnover and is effectively off by default (999/9999). New divergences: DV7 (default vol function and floor), DV8/DV9 (config-key names). VERIFIED.
 20. **Evidence discipline.** Phase 5 changed `impl_evidence` only where code was newly read (R04, R07, P04, E02) and corrected one Phase 4 doc_status label (P04). This is logged in §6.5. No counterfactual was relabelled.
 
 ---
@@ -199,12 +199,12 @@ The CSV schema (spec §32) has no tier column. Tiers are recorded here only, so 
 
 | Tier | Inventory IDs | Treatment |
 |---|---|---|
-| **Tier 1** (16 cards covering 27 IDs) | C01, C02, C03 · A01, A02 · A04 (+R01) · A05 · A06 · R02 · A08, R04 (+R03) · P01 · P02, P03 (+R06) · R07 · P05, P06 · E02 · R11 (+R09) · P04 · E04 (+E03) | Full card (§6.4). R01, R03, R06, R09 and E03 are covered inside the card of the component they calibrate or feed |
+| **Tier 1** (16 cards covering 26 IDs) | C01, C02, C03 · A01, A02 · A04 (+R01) · A05 · A06 · R02 · A08, R04 (+R03) · P01 · P02, P03 (+R06) · R07 · P05, P06 · E02 · R11 (+R09) · P04 · E04 (+E03) | Full card (§6.4). R01, R03, R06, R09 and E03 are covered inside the card of the component they calibrate or feed |
 | **Tier 1 finding (not a component)** | SC | Signal Contract, §5 |
 | **Tier 2** | C04, C05, D01, A03, A07, R05, R08, R10, P07, P08, P09, E01, E05 | CSV row + note (§6.3) |
 | **Tier 3** | none of the 40 rows | Peripheral packages are not inventoried: `syslogging`, `syslogdiag`, `dashboard`, `sysproduction/reporting`, backup/cleaner scripts, `syscontrol` scheduling. They do not materially affect alpha, estimation, portfolio, risk or execution logic (INFERRED from package listing, §2) |
 
-Card count: 16, within the ~15–20 guideline of spec §28. Combined cards are used where components share one implementation path. The count reflects cards, not IDs.
+Card count: 16, within the ~15–20 guideline of spec §28. ID arithmetic: 26 Tier 1 IDs + 1 Signal Contract row (SC) + 13 Tier 2 IDs = 40 rows. Combined cards are used where components share one implementation path. The count reflects cards, not IDs.
 
 ### 6.3 Tier 2 notes
 
@@ -361,7 +361,7 @@ Conventions. "Doc" means repository documentation in `docs/`, not docstrings. Ev
 - **Doc/impl divergence:** N for the combination formula; zero handling UD1.
 - **Case A:** survives unchanged.
 - **Case B:** partial; exits need redesign. Forward-filling holds the last non-zero forecast through intended flat periods (EXP-01: combined forecast constant at +10 over 3505 intended-flat bars). A linear blend of discrete signals yields fractional positions that no individual rule intended.
-- **swap_evidence:** INFERRED; the ffill-through-zero mechanism is TESTED. **impl_evidence:** VERIFIED.
+- **swap_evidence:** **TESTED** (CSV value set in Phase 4 and approved at the gate; unchanged). The TESTED label rests on EXP-01, which ran an event-style signal containing exact zeros through combination. It covers the Case B flat-handling mechanism only. The Case A verdict and the rest of the Case B reasoning (fractional blends) are INFERRED. **impl_evidence:** VERIFIED.
 
 #### Card 7 — R02 Volatility estimation
 
@@ -608,7 +608,7 @@ Each change below is backed by source read during Phase 5. No HYPOTHESIS or INFE
 | R02 | divergence | Y (DV4) | Unchanged value; DV7 added as a further basis |
 | (all 40 rows) | last_phase | 4 → 5 | Tier assigned in Phase 5 (Tier 1 rows also carded) |
 
-Unchanged on purpose: R03, R05 and R06 stay INFERRED (optimiser and pooled-correlation internals not read). D01, P07, P09 and E05 stay UNVERIFIED. All `swap_evidence` values are unchanged (INFERRED; EXP-01 remains the only TESTED mechanism and is labelled as such in the cards).
+Unchanged on purpose: R03, R05 and R06 stay INFERRED (optimiser and pooled-correlation internals not read). D01, P07, P09 and E05 stay UNVERIFIED. All `swap_evidence` values are unchanged from Phase 4: A06 = TESTED (EXP-01), A07 = HYPOTHESIS, P09 = UNVERIFIED, all others INFERRED.
 
 ## 7. pysystemtrade-Specific Framework Concepts
 NOT YET AUDITED (Phase 6).
