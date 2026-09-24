@@ -160,7 +160,15 @@ chk("each EXP-06..11 section has the five spec 22 items", (s16.count("*Question:
 chk("EXP-06..11 in progress table", all(("| EXP-%02d |"%k) in P for k in range(6,12)))
 for k in ["exp06_pf2_cost_deflator.py","exp07_pf1_scalar_backfill.py","exp08_pf3_pf4_pf11_forecast_weights.py","exp08b_pf11_breakdown.py","exp09_op11_1_years_of_data.py","exp10_pf15_per_contract_bfill.py","exp11_op9_limit_fill_accounting.py"]:
     chk("script exists: "+k, __import__("os").path.exists("scaffolding/experiments/"+k) and __import__("os").path.exists("scaffolding/experiments/"+k.split("_")[0]+"_output.txt"))
-chk("reclassifications recorded (PF-11, PF-15) with originals kept", "**changed → CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED**" in s16 and "**changed → NO ISSUE IDENTIFIED** for positions and P&L" in s16)
+chk("PF-15 reclassification recorded", "**changed → NO ISSUE IDENTIFIED** for positions and P&L" in s16)
+# ---- Phase 15 correction (session 8, operator-authorised) ----
+c16=s16[:s16.index("### 16.12")]
+chk("PF-11 label is POSSIBLE ISSUE in 16.2, 16.5 and 16.10 (outside the 16.12 history)", "| PF-11 end-anchored fit grid |" in c16 and "**POSSIBLE ISSUE** (unchanged from §15" in c16 and "**Causality label:** **POSSIBLE ISSUE**, unchanged from §15" in c16 and "| **POSSIBLE ISSUE**, unchanged (the interim CONFIRMED relabel was reverted" in c16 and "changed → CONFIRMED" not in c16)
+chk("PF-11 separate lines: design property TESTED L1-L4; future market data NO ISSUE IDENTIFIED", "**Sample-end → refit-date dependency:** TESTED, **L1–L4**" in c16 and "**design property**" in c16 and "**Future market data entering estimates:** **NO ISSUE IDENTIFIED**" in c16)
+chk("16.12 keeps the interim text verbatim and the section 15 original", "### 16.12 Phase 15 correction" in s16 and "**changed → CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED** (calendar-only post-T input)" in s16[s16.index("### 16.12"):] and "Reclassified to **CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED**" in s16[s16.index("### 16.12"):])
+chk("Executive Summary: PF-11 stays POSSIBLE", "**PF-11 stays POSSIBLE ISSUE**" in es and "PF-11 POSSIBLE → CONFIRMED" not in R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")])
+chk("O-P9-1 accounting-valuation sentence present", "is an accounting-valuation effect" in s16 and "It is not evidence of future information." in s16)
+chk("progress: F45 PF-11 POSSIBLE with interim kept; L-P15-1 limitation recorded", "PF-11 stays **POSSIBLE ISSUE**" in P and "Interim wording, superseded" in P and "L-P15-1 (documented limitation, Phase 15)" in P)
 chk("section 15 not edited: PF-11 and PF-15 still POSSIBLE there", "| PF-11 | Fit-period grid anchored to the sample end |" in s15 and "**POSSIBLE ISSUE** (post-T calendar information" in s15 and "**POSSIBLE ISSUE** (post-T values enter only" in s15)
 chk("causal levels reported (L1-L4)", all(x in s16 for x in ["L1 internal calculation","L2 forecast","L3 position","L4 P&L"]))
 chk("untested findings listed with reasons", "### 16.9 Findings not tested" in s16 and "O-P9-3" in s16 and "PF-8" in s16)
