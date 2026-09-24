@@ -1,0 +1,38 @@
+Selected (rule-based): ordinary=2023-02-28 roll=2023-02-09 boundary=2024-03-28
+value_per_point=1000.0; fx(USD)=1.0; delayfill=True; roundpositions=True
+
+=== ORDINARY: decision date t = 2023-02-28 ===
+raw rows on calendar day t: 9; first 2023-02-28 14:30:00; last 2023-02-28 23:00:00 = 113.671875
+daily price label 2023-02-28 00:00:00 value 113.671875 (equals last raw value of day t: True)
+combined forecast at t: -11.0438 (t-1: -10.6155)
+notional position at t: -1.6946; buffered rounded position at t: -2.0 (t-1: -1.0)
+  row 2023-02-27: price 113.750000 | pos_used -1.0 | fill - | gross P&L -250.00 | identity -250.00
+  row 2023-02-28: price 113.671875 | pos_used -1.0 | fill - | gross P&L 78.12 | identity 78.12
+  row 2023-03-01: price 113.140625 | pos_used -2.0 | fill -1 @ 113.140625 | gross P&L 531.25 | identity 531.25
+  row 2023-03-02: price 112.687500 | pos_used -2.0 | fill - | gross P&L 906.25 | identity 906.25
+
+=== ROLL: PRICE_CONTRACT change on 2023-02-09 ===
+multiple prices 2023-02-08: PRICE 113.640625 (20230300), FORWARD 114.1875 (20230600)
+multiple prices 2023-02-09: PRICE 113.734375 (20230600), FORWARD 114.265625 (20230900)
+adjusted price diff on roll day: -0.468750; whole-day new-contract move (PRICE@roll close - FORWARD@prev close; NOT the stitched move when the roll is intraday, see exp12b): -0.453125; raw PRICE jump across contracts: 0.093750
+
+=== ROLL: decision date t = 2023-02-09 ===
+raw rows on calendar day t: 10; first 2023-02-09 14:30:00; last 2023-02-09 23:00:00 = 115.859375
+daily price label 2023-02-09 00:00:00 value 115.859375 (equals last raw value of day t: True)
+combined forecast at t: -5.9176 (t-1: -5.6115)
+notional position at t: -0.7777; buffered rounded position at t: -1.0 (t-1: -1.0)
+  row 2023-02-08: price 116.328125 | pos_used -1.0 | fill - | gross P&L -375.00 | identity -375.00
+  row 2023-02-09: price 115.859375 | pos_used -1.0 | fill - | gross P&L 468.75 | identity 468.75
+  row 2023-02-10: price 115.343750 | pos_used -1.0 | fill - | gross P&L 515.62 | identity 515.62
+  row 2023-02-13: price 115.562500 | pos_used -1.0 | fill - | gross P&L -218.75 | identity -218.75
+roll-cost pseudo-fill dates in 2023: [datetime.date(2023, 2, 15), datetime.date(2023, 5, 17), datetime.date(2023, 8, 16), datetime.date(2023, 11, 15)]; roll day among them: False
+actual PRICE_CONTRACT change days in 2023: [datetime.date(2023, 2, 9), datetime.date(2023, 5, 23), datetime.date(2023, 8, 21), datetime.date(2023, 11, 20)]
+
+=== BOUNDARY (most recent date): decision date t = 2024-03-28 ===
+raw rows on calendar day t: 9; first 2024-03-28 13:30:00; last 2024-03-28 23:00:00 = 110.71875
+daily price label 2024-03-28 00:00:00 value 110.71875 (equals last raw value of day t: True)
+combined forecast at t: -8.7169 (t-1: -8.7192)
+notional position at t: -1.6471; buffered rounded position at t: -1.0 (t-1: -1.0)
+  row 2024-03-27: price 110.875000 | pos_used -1.0 | fill - | gross P&L -250.00 | identity -250.00
+  row 2024-03-28: price 110.718750 | pos_used -1.0 | fill - | gross P&L 156.25 | identity 156.25
+  no row after t: the position decided at t is never filled or held inside the sample
