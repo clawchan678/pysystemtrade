@@ -50,16 +50,16 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P1A Phase 11 — Forecast / weight / portfolio methodology | COMPLETE — **APPROVED by operator** (session 5; report §12: G1 and G7 closed, P09 core read (PARTIALLY AUDITED — RESOURCE PRIORITY), O-P11-1…4, PF-13 candidate) |
 | P1A Phase 12 — Cost / turnover / buffering / speed limits | COMPLETE — **APPROVED by operator**, including both consistency-check updates and the P09 reclassification (session 5; report §13: cost components, turnover controls, cost influence, research/live table, intraday-sensitive assumptions, DV13/UD4) |
 | P1A Phase 9 — Simulation / backtest architecture | COMPLETE (session 6; report §10: end-to-end trace, §39 dimensions, classification, order simulator UD5, PF-14 candidate, DISC-3) |
-| P1A Phases 14, 13 | NOT STARTED |
+| P1A Phase 14 — Static causality / look-ahead | COMPLETE (session 6; report §15: central question answered per configuration; PF-1…PF-15 and N1–N14 classified; EXP-04 TESTED) |
+| P1A Phase 13 | NOT STARTED |
 | P1A Phase 10 | ON HOLD (operator decision; not started, not skipped) |
 | P1B, P2 | NOT STARTED |
 
-**Current phase:** P1A in progress (session 6). Phases 11 and 12 are complete and approved (session 5 ended at an intermediate stop chosen by the operator; this is not the P1A stop). Phase 9 is complete (session 6).
+**Current phase:** P1A in progress (session 6). Phases 11 and 12 are complete and approved (session 5 ended at an intermediate stop chosen by the operator; this is not the P1A stop). Phases 9 and 14 are complete (session 6).
 
 **Exact next task:** Continue **P1A** in session 6:
-1. **Phase 14 — Static causality / look-ahead** (report §15). Classify PF-1…PF-12, the PF-13 candidate and the Phase 9 PF-14 candidate as NO ISSUE IDENTIFIED / POSSIBLE ISSUE / CONFIRMED ISSUE / UNVERIFIED, answering the spec's central question at time T.
-2. **Phase 13 — Configuration / experiment infrastructure** (report §14), targeted.
-3. **Phase 10 — Data / contract / roll architecture** (report §11): **ON HOLD (operator)**. Do not start it and do not mark it skipped or cut.
+1. **Phase 13 — Configuration / experiment infrastructure** (report §14), targeted.
+2. **Phase 10 — Data / contract / roll architecture** (report §11): **ON HOLD (operator)**. Do not start it and do not mark it skipped or cut.
 
 Then stop for the operator's Phase 10 decision. Do not start P1B.
 
@@ -94,6 +94,8 @@ Then stop for the operator's Phase 10 decision. Do not start P1B.
 | EXP-01 | Does an exact-zero raw forecast propagate as zero, or as NaN that is then forward-filled? | `scaffolding/experiments/exp01_zero_forecast.py` (SOFR, csv sim data, fixed scalar 1, single rule weight 1, FDM 1) | Rule output 3505 zeros of 10440 rows. Raw forecast: 0 zeros, 3505 NaN. Capped: 3505 NaN. Combined forecast: 0 zeros, 0 NaN, unique values {10.0}. Subsystem position: 0 zeros, 10430 non-zero, 10 NaN (vol warm-up). **Exact zeros become NaN and are forward-filled, so the prior non-zero forecast is held.** | TESTED |
 | EXP-02 | Does `base_system_cache` key `System.get_instrument_list` on its arguments? | `scaffolding/experiments/exp02_base_cache_args.py` | Same system: default call → [CORN,SOFR,US10]; later call with `force_to_passed_list=["SOFR"]` → [CORN,SOFR,US10] (cached). Fresh system → ["SOFR"]. One cache ref, keyed with no arguments. **Arguments are ignored in base-system cache keys.** | TESTED |
 | EXP-03 | Can a rule return a Tx1 DataFrame, as the docs state? | inline: `pd.Series(<Tx1 DataFrame>)` under pandas 2.1.3 | `ValueError: The truth value of a DataFrame is ambiguous` at the `pd.Series(result)` coercion step. End-to-end failure through `Rules.get_raw_forecast` is INFERRED, not run. | TESTED (coercion step only) |
+
+| EXP-04 | (Phase 14, PF-14) Does the daily resample label day *t*'s 23:00 price at 00:00 of day *t*, so that `reindex(ffill)` onto an hourly index exposes it to earlier hours of day *t*? | `scaffolding/experiments/exp04_daily_label_alignment.py` (synthetic 9-row series; repo's own `resample_prices_to_business_day_index` and `get_intraday_pdf_at_frequency`); output `exp04_output.txt` | Daily labels 00:00 hold 109/209/309 (the 23:00 values); hourly bars at 10:00/15:00 see 109/209/309 while hourly prices are 101/102, 201/202, 301/302. **Mechanism holds.** `audit/repo` stayed clean | TESTED |
 
 ## Estimation flags (defaults in `sysdata/config/defaults.yaml` @ 8958c49)
 
@@ -138,6 +140,11 @@ See report §3–§5, §8 and the Executive Summary. Key items: F1 zero→NaN→
 - F38: an undocumented alternative accounts stage (the order simulator, UD5) runs a per-row order/fill loop (market or hourly limit orders), bypasses buffering, and computes gross P&L against bar prices rather than fill prices (O-P9-1, INFERRED effect). Not inventoried (41 rows kept); DISC-3 raised.
 - F39: in hourly configurations, daily series labelled 00:00 of day *t* (holding day-*t* closing data) are ffilled onto that day's hourly bars (PF-14 candidate, classified in §15).
 
+**Phase 14 (report §15):**
+- F40: default classic backtest: no post-T input to the *position* was identified (NO ISSUE IDENTIFIED, static, not verified causal); the end-anchored cost deflator makes backtest *costs / net P&L* use the last sample date (PF-2, CONFIRMED ISSUE, default ON). Shipped fixed-parameter provenance (N9) and roll/back-adjustment (PF-8) are UNVERIFIED.
+- F41: with estimation on, post-T inputs reach positions (PF-1 backfill, PF-3/PF-4 end-of-sample SR cost × full-sample turnover, PF-2 via instrument weights/IDM, `in_sample` date method N7: CONFIRMED ISSUE, conditional; PF-11 grid placement: POSSIBLE ISSUE).
+- F42: non-default paths: compounding carries PF-2 (PF-6), shocked-vol backfill (PF-7), P09 final-price costs (PF-13), hourly daily→hourly ffill (PF-14, TESTED by EXP-04): CONFIRMED ISSUE, conditional; per-contract value bfill (PF-15): POSSIBLE ISSUE. Live decisions at T: NO ISSUE IDENTIFIED (end anchors equal today).
+
 ## Optional-phase status
 
 Phase 10: not started. Phase 15: not started (Phases 7–8 and 11–12 ran no experiments; two INFERRED effects from Phase 11 are candidates for Phase 15; the Phase 8 flow trace was NOT TESTED because static reading was sufficient, §9.8) (EXP-01/02 are Signal-Contract/Stage checks, not causality tests). Phase 19: not started.
@@ -163,7 +170,7 @@ Phase 10: not started. Phase 15: not started (Phases 7–8 and 11–12 ran no ex
 - Session 4 (2026-09-24): fresh-session start procedure followed (branch head `a3efc5d` with `d5f094f` in history verified). The scratch clone at `audit/repo` and the venv were already present in this container; both were verified rather than recreated (`8958c49` and a clean tree, before and after; `import systems.basesystem` OK; no setup attempt consumed). Phase 8 completed (report §9). CSV: `last_phase` → 8 on 35 rows; no other field changed. DV11/DV12 added. DISC-1/DISC-2 raised. `check_consistency.py` updated for P0 end. **P0 STOP.**
 - Session 2: Phase 4 approved; spec files added; Phase 5 completed; persistence check (26-ID count, Card 6); U5 revert; Phase 5 approved; Phase 6 completed and approved (E06 kept). SHA re-verified `8958c49`. Phase 7 handed to a fresh session.
 
-- Session 6 (2026-09-24): fresh session. Start checks passed (branch head `2a588ab`; 101/101 consistency checks before any change). Scratch clone and venv recreated in setup attempt 1 of 2 (clone `8958c49`, clean). Phase 9 completed (report §10; commit recorded in the next log line). CSV: `last_phase` → 9 on C01, C02, C03, C05, E01; nothing else. UD5, PF-14 candidate and DISC-3 added.
+- Session 6 (2026-09-24): fresh session. Start checks passed (branch head `2a588ab`; 101/101 consistency checks before any change). Scratch clone and venv recreated in setup attempt 1 of 2 (clone `8958c49`, clean). Phase 9 completed (report §10; commit recorded in the next log line). CSV: `last_phase` → 9 on C01, C02, C03, C05, E01; nothing else. UD5, PF-14 candidate and DISC-3 added. Phase 9 commit `820e157`. Phase 14 completed (report §15): PF-1…PF-15 and N1–N14 classified; EXP-04 run (synthetic, scratch-only, TESTED). CSV: `last_phase` → 14 on 26 rows (logged §15.7); nothing else.
 
 ## Safety log
 
