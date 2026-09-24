@@ -63,7 +63,7 @@ chk("CSV P07 VERIFIED (Phase 7, logged)", byid["P07"]["impl_evidence"]=="VERIFIE
 chk("CSV D01/E05 still UNVERIFIED; P09 VERIFIED since session 5 (logged in §13.9)", all(byid[k]["impl_evidence"]=="UNVERIFIED" for k in ("D01","E05")) and byid["P09"]["impl_evidence"]=="VERIFIED")
 chk("E06 unchanged Tier2/VERIFIED", byid["E06"]["impl_evidence"]=="VERIFIED")
 DIST=sorted(__import__("collections").Counter(r["last_phase"] for r in rows).items())
-chk("last_phase distribution matches the latest logged session 6 change (%s)"%DIST, DIST in ([("11",21),("12",8),("5",2),("8",5),("9",5)],[("11",6),("12",2),("14",26),("5",2),("8",2),("9",3)]))
+chk("last_phase distribution matches the latest logged session 6 change (%s)"%DIST, DIST in ([("11",21),("12",8),("5",2),("8",5),("9",5)],[("11",6),("12",2),("14",26),("5",2),("8",2),("9",3)],[("11",6),("12",2),("13",2),("14",26),("5",1),("8",2),("9",2)]))
 es=R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")]
 nb=len(re.findall(r"^\d+\. ",es,re.M)); chk("Executive Summary <=20 bullets (%d)"%nb, nb<=20)
 chk("progress: Phase 7 COMPLETE", "P0 Phase 7 — State and estimation | COMPLETE" in P)
@@ -127,3 +127,16 @@ chk("section 15 distinguishes NO ISSUE IDENTIFIED from verified causal", "not ve
 chk("section 15 covers the spec 39 inspection items", all(k in s15 for k in ["Future prices","Same-day close leakage","Volatility leakage","Correlation leakage","Weight","Full-sample estimation","Warm-up / backfill","OOS contamination","Execution timing","Cost timing","Roll / back-adjustment"]))
 chk("EXP-04 recorded with the five spec 22 items and in progress", s15.count("*Question:*")==1 and "*Stopping condition:*" in s15 and "| EXP-04 |" in P)
 chk("progress: Phase 14 COMPLETE", "P1A Phase 14 — Static causality / look-ahead | COMPLETE" in P)
+
+# ---- P1A Phase 13 and session 6 stop ----
+s14=R[R.index("## 14. Configuration / Experiment Infrastructure"):R.index("## 15. Static Causality")]
+chk("section 14 complete, placeholder gone", "Phase 13 status: COMPLETE" in s14 and "NOT YET AUDITED (P1A Phase 13)" not in R)
+chk("section 14 has 14.1-14.6", all(("### 14.%d "%k) in s14 for k in range(1,7)))
+chk("section 14 covers the spec 39 items", all(k in s14 for k in ["Configurable components","Strategy representation","Instrument representation","Portfolio representation","Parameter storage","Reproducibility","Configuration versioning","Code / config interaction","Experiment comparison"]))
+chk("DV14 and UD5 in register", "| DV14 |" in R and "| UD5 |" in R)
+chk("sections 10, 14, 15 complete; section 11 still a placeholder (Phase 10 ON HOLD)", all(x in R for x in ["Phase 9 status: COMPLETE","Phase 13 status: COMPLETE","Phase 14 status: COMPLETE","NOT YET AUDITED (P1A Phase 10)"]))
+chk("progress: Phase 13 COMPLETE", "P1A Phase 13 — Configuration / experiment infrastructure | COMPLETE" in P)
+chk("progress: exact next task is the operator Phase 10 decision", "**Exact next task:** **Operator decision on Phase 10 (data / contract / roll, report §11) based on actual spend; then the P1A STOP.**" in P)
+chk("progress: session 6 usage UNRECORDED; earlier usage lines and $81/$66 kept", "Phases 9/14/13 (session 6): **UNRECORDED**" in P and "Phase 11-12 (session 5): **UNRECORDED**" in P and "$66" in P and "$81" in P)
+chk("CSV: session 6 changed last_phase only (C04 and R03-R07 INFERRED; D01/E05 UNVERIFIED)", byid["C04"]["impl_evidence"]=="INFERRED" and all(byid[k]["impl_evidence"]=="UNVERIFIED" for k in ("D01","E05")))
+chk("Executive Summary mentions Phases 9, 14 and 13", all(k in es for k in ["Phase 9, §10","Phase 14, §15","Phase 13, §14"]))
