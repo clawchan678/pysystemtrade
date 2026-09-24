@@ -1,0 +1,9 @@
+price rows 21301 (2013-10-02 11:00:00 .. 2024-03-28 20:00:00); non-zero fills 1843 (buys 919, sells 924); value per point 1000.0
+framework gross P&L total (USD): 31515.62
+reconstruction at simulator prices: 31515.62  (should equal framework total)
+same trades valued at fill prices : -129875.00
+gap (fill-price valuation - framework): -161390.62 USD = -512.1% of framework gross
+fills where fill price is worse for the trader than the fill-row price: 1843/1843
+buy: fills=919, slippage flag True=0, raw cost per contract mean=1.6700 USD
+sell: fills=924, slippage flag True=924, raw cost per contract mean=9.6700 USD
+framework total costs (instrument ccy, before normalisation): -13396.81

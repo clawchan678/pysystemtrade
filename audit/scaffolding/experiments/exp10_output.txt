@@ -1,0 +1,17 @@
+runtime baseline 175s, variant 180s; dates in loop: 13422
+per-contract value rows changed by the variant CORN: 0 (-)
+per-contract value rows changed by the variant EUROSTX: 10801 (1972-10-18..2014-03-12)
+per-contract value rows changed by the variant MXP: 5977 (1972-10-18..1995-09-14)
+per-contract value rows changed by the variant SOFR: 2982 (1972-10-18..1984-03-22)
+per-contract value rows changed by the variant US10: 2573 (1972-10-18..1982-08-27)
+per-contract value rows changed by the variant V2X: 10490 (1972-10-18..2013-01-01)
+position rows differing per instrument: {'US10': 0, 'CORN': 0, 'V2X': 0, 'SOFR': 0, 'EUROSTX': 0, 'MXP': 0}  maxabs: 0.0
+gross: rows differing=0, sum B=1311010.42 V=1311010.42
+costs: rows differing=0, sum B=-79594.58 V=-79594.58
+net: rows differing=0, sum B=1231415.84 V=1231415.84
+EUROSTX: non-zero baseline P09 positions before data start: 0
+MXP: non-zero baseline P09 positions before data start: 0
+SOFR: non-zero baseline P09 positions before data start: 0
+US10: non-zero baseline P09 positions before data start: 0
+V2X: non-zero baseline P09 positions before data start: 0
+[exited with code 0]

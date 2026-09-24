@@ -24,15 +24,15 @@ byid={r["component_id"].split("_")[0]:r for r in rows}
 exp={"R04":{"impl_evidence":"INFERRED"},"R07":{"impl_evidence":"INFERRED"},"P04":{"impl_evidence":"VERIFIED","stateful":"N","doc_status":"NOT_DOCUMENTED"},"E02":{"impl_evidence":"VERIFIED","divergence":"Y"},"R11":{"divergence":"Y"},"R03":{"impl_evidence":"INFERRED"},"R05":{"impl_evidence":"INFERRED"},"R06":{"impl_evidence":"INFERRED"}}
 for i,d in exp.items():
     for k,v in d.items(): chk("CSV %s.%s == %s (is %s)"%(i,k,v,byid[i][k]), byid[i][k]==v)
-chk("last_phase in {5,...,14} (session 7 adds 10)", all(r["last_phase"] in ("5","6","7","8","9","10","11","12","13","14") for r in rows))
+chk("last_phase in {5,...,15} (session 8 adds 15)", all(r["last_phase"] in ("5","6","7","8","9","10","11","12","13","14","15") for r in rows))
 chk("swap_evidence as Phase 4 (A06 TESTED, A07 HYPOTHESIS, rest INFERRED/UNVERIFIED)", all(r["swap_evidence"]==({"A06_FORECAST_COMBINATION":"TESTED","A07_FORECAST_MAPPING":"HYPOTHESIS"}.get(r["component_id"], r["swap_evidence"] if r["swap_evidence"] in ("INFERRED","UNVERIFIED") else "X")) for r in rows))
 chk("transfer labels NOT YET ASSESSED", all(r["swing_transfer_label"]==r["intraday_transfer_label"]=="NOT YET ASSESSED" for r in rows))
 for k in ["DV7","DV8","DV9"]: chk(k+" in divergence register", ("| %s |"%k) in R)
 chk("progress: Phase 5 COMPLETE", "P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE" in P)
 NT=P[P.index("**Exact next task:**"):P.index("## Unresolved issues")]
-chk("progress: next task = STOP / await operator decision after P1A (P1B not started)", "**Exact next task:** **STOP. Await an operator decision**" in P and "Do not start P1B without explicit approval" in P)
+chk("progress: next task = STOP / await operator authorization after Phase 15 (Phase 16 not started)", "**Exact next task:** **STOP. Await operator authorization** after Phase 15" in P and "Do not start Phase 16" in P)
 chk("progress: usage NOT RECORDED", "NOT RECORDED" in P)
-chk("report status line: P1A COMPLETE — P1A STOP", "P1A COMPLETE — P1A STOP" in R[:2000] and "Phase 10 is ON HOLD" not in R[:2000])
+chk("report status line: P1A COMPLETE; Phase 15 COMPLETE — STOPPED BEFORE PHASE 16", "P1A COMPLETE — P1A STOP" in R[:2000] and "Phase 15 COMPLETE" in R[:2000] and "STOPPED BEFORE PHASE 16" in R[:2000])
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)
 
 chk("Card 6 swap_evidence matches CSV TESTED", "**swap_evidence:** **TESTED**" in R[R.index("#### Card 6"):R.index("#### Card 7")])
@@ -63,7 +63,7 @@ chk("CSV P07 VERIFIED (Phase 7, logged)", byid["P07"]["impl_evidence"]=="VERIFIE
 chk("CSV: E05 still UNVERIFIED; D01 VERIFIED since session 7 (§11.13); P09 VERIFIED since session 5 (§13.9)", byid["E05"]["impl_evidence"]=="UNVERIFIED" and byid["D01"]["impl_evidence"]=="VERIFIED" and byid["P09"]["impl_evidence"]=="VERIFIED" and "D01_PRICE_ROLL_DATA | impl_evidence | UNVERIFIED → **VERIFIED**" in R)
 chk("E06 unchanged Tier2/VERIFIED", byid["E06"]["impl_evidence"]=="VERIFIED")
 DIST=sorted(__import__("collections").Counter(r["last_phase"] for r in rows).items())
-chk("last_phase distribution matches session 7 (%s)"%DIST, DIST==[("10",2),("11",6),("12",2),("13",1),("14",25),("5",1),("8",2),("9",2)])
+chk("last_phase distribution matches session 8 (%s)"%DIST, DIST==[("10",2),("11",6),("12",2),("13",1),("14",19),("15",6),("5",1),("8",2),("9",2)])
 es=R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")]
 nb=len(re.findall(r"^\d+\. ",es,re.M)); chk("Executive Summary <=20 bullets (%d)"%nb, nb<=20)
 chk("progress: Phase 7 COMPLETE", "P0 Phase 7 — State and estimation | COMPLETE" in P)
@@ -151,3 +151,22 @@ s15=R[R.index("## 15."):R.index("## 16.")]
 chk("section 15 not edited: PF-8 there still reads UNVERIFIED", "| PF-8 | Carry / roll data |" in s15 and "**UNVERIFIED**" in s15[s15.index("| PF-8 | Carry / roll data |"):s15.index("| PF-8 | Carry / roll data |")+900])
 chk("progress: Phase 10 usage UNRECORDED; $81/$66 kept as balances", "Phase 10 (session 7): **UNRECORDED**" in P and "REMAINING Claude Code credit balance: $81" in P and "$66" in P)
 chk("Executive Summary still <= 20 bullets after Phase 10", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+
+# ---- P1B Phase 15 (session 8) ----
+s16=R[R.index("## 16. Empirical Causality Testing"):R.index("## 17. Position / Lag")]
+chk("section 16 complete, placeholder gone", "Phase 15 status: COMPLETE" in s16 and "NOT YET AUDITED (P1B Phase 15)" not in R)
+chk("section 16 has 16.1-16.11", all(("### 16.%d "%k) in s16 for k in range(1,12)))
+chk("each EXP-06..11 section has the five spec 22 items", (s16.count("*Question:*")+s16.count("*Questions:*"))==6 and s16.count("*Why static inspection is insufficient:*")==6 and s16.count("*Smallest experiment:*")==6 and s16.count("*Stopping condition:*")>=5)
+chk("EXP-06..11 in progress table", all(("| EXP-%02d |"%k) in P for k in range(6,12)))
+for k in ["exp06_pf2_cost_deflator.py","exp07_pf1_scalar_backfill.py","exp08_pf3_pf4_pf11_forecast_weights.py","exp08b_pf11_breakdown.py","exp09_op11_1_years_of_data.py","exp10_pf15_per_contract_bfill.py","exp11_op9_limit_fill_accounting.py"]:
+    chk("script exists: "+k, __import__("os").path.exists("scaffolding/experiments/"+k) and __import__("os").path.exists("scaffolding/experiments/"+k.split("_")[0]+"_output.txt"))
+chk("reclassifications recorded (PF-11, PF-15) with originals kept", "**changed → CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED**" in s16 and "**changed → NO ISSUE IDENTIFIED** for positions and P&L" in s16)
+chk("section 15 not edited: PF-11 and PF-15 still POSSIBLE there", "| PF-11 | Fit-period grid anchored to the sample end |" in s15 and "**POSSIBLE ISSUE** (post-T calendar information" in s15 and "**POSSIBLE ISSUE** (post-T values enter only" in s15)
+chk("causal levels reported (L1-L4)", all(x in s16 for x in ["L1 internal calculation","L2 forecast","L3 position","L4 P&L"]))
+chk("untested findings listed with reasons", "### 16.9 Findings not tested" in s16 and "O-P9-3" in s16 and "PF-8" in s16)
+chk("no 'material' label applied", "The spec defines no threshold" in s16)
+chk("CSV: exactly E02,R01,R05,R08,R09,P09 at last_phase 15", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="15")==["E02","P09","R01","R05","R08","R09"])
+chk("CSV: U5 still holds (R03-R07, C04 INFERRED)", all(byid[i]["impl_evidence"]=="INFERRED" for i in ["R03","R04","R05","R06","R07","C04"]))
+chk("progress: Phase 15 COMPLETE, stopped before Phase 16; usage UNRECORDED", "P1B Phase 15 — Empirical causality | COMPLETE" in P and "STOPPED BEFORE PHASE 16" in P and "Phase 15 (session 8): **UNRECORDED**" in P)
+chk("progress: Phase 15 estimation flags per experiment", "**Phase 15 flags per experiment" in P)
+chk("Executive Summary <= 20 bullets after Phase 15", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)

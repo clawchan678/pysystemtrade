@@ -1,0 +1,64 @@
+=== (a) backfill True vs False, full data ===
+scalar ('carry', 'CORN'): 509 rows differ, 1972-10-18..1974-09-30; backfilled value=14.0521
+scalar ('carry', 'EUROSTX'): 0 rows differ
+scalar ('carry', 'MXP'): 0 rows differ
+scalar ('carry', 'SOFR'): 0 rows differ
+scalar ('carry', 'US10'): 0 rows differ
+scalar ('carry', 'V2X'): 0 rows differ
+scalar ('ewmac16_64', 'CORN'): 509 rows differ, 1972-10-18..1974-09-30; backfilled value=3.9722
+scalar ('ewmac16_64', 'EUROSTX'): 0 rows differ
+scalar ('ewmac16_64', 'MXP'): 0 rows differ
+scalar ('ewmac16_64', 'SOFR'): 0 rows differ
+scalar ('ewmac16_64', 'US10'): 0 rows differ
+scalar ('ewmac16_64', 'V2X'): 0 rows differ
+scalar ('ewmac32_128', 'CORN'): 509 rows differ, 1972-10-18..1974-09-30; backfilled value=3.1492
+scalar ('ewmac32_128', 'EUROSTX'): 0 rows differ
+scalar ('ewmac32_128', 'MXP'): 0 rows differ
+scalar ('ewmac32_128', 'SOFR'): 0 rows differ
+scalar ('ewmac32_128', 'US10'): 0 rows differ
+scalar ('ewmac32_128', 'V2X'): 0 rows differ
+scalar ('ewmac64_256', 'CORN'): 509 rows differ, 1972-10-18..1974-09-30; backfilled value=2.5416
+scalar ('ewmac64_256', 'EUROSTX'): 0 rows differ
+scalar ('ewmac64_256', 'MXP'): 0 rows differ
+scalar ('ewmac64_256', 'SOFR'): 0 rows differ
+scalar ('ewmac64_256', 'US10'): 0 rows differ
+scalar ('ewmac64_256', 'V2X'): 0 rows differ
+('fc', 'CORN'): 499 rows differ (1972-11-01..1974-09-30)
+('pos', 'CORN'): 502 rows differ (1972-11-01..1974-10-03)
+('gross', 'CORN'): 471 rows differ (1972-11-03..1974-10-07) sum over differing rows: base=419295.00 safe=-2187.50
+('costs', 'CORN'): 503 rows differ (1972-11-02..1975-07-02) sum over differing rows: base=-2698.20 safe=-480.10
+('net', 'CORN'): 483 rows differ (1972-11-02..1975-07-02) sum over differing rows: base=417496.80 safe=-1767.60
+('gross', 'PORT'): 471 rows differ (1972-11-03..1974-10-07) sum over differing rows: base=419295.00 safe=-2187.50
+('costs', 'PORT'): 503 rows differ (1972-11-02..1975-07-02) sum over differing rows: base=-2698.20 safe=-480.10
+('net', 'PORT'): 483 rows differ (1972-11-02..1975-07-02) sum over differing rows: base=417496.80 safe=-1767.60
+PORT gross SR full sample: base=0.5141 safe=0.4380
+PORT net SR full sample: base=0.4919 safe=0.4146
+
+=== (b) matched truncation control, backfill True, C=2019-12-31 ===
+scalar rows differing at matched timestamps (all rules x instruments): 4
+('fc', 'SOFR'): n_diff=1 of 9333, maxabs=2.45e-08
+('pos', 'SOFR'): n_diff=0 of 9333, maxabs=0
+('costs', 'SOFR'): n_diff=1098 of 9288, maxabs=51.5
+('net', 'SOFR'): n_diff=1098 of 9333, maxabs=51.5
+('fc', 'US10'): n_diff=1 of 9742, maxabs=1.93e-08
+('pos', 'US10'): n_diff=0 of 9742, maxabs=0
+('costs', 'US10'): n_diff=605 of 9678, maxabs=8.92
+('net', 'US10'): n_diff=605 of 9742, maxabs=8.92
+('fc', 'EUROSTX'): n_diff=0 of 1513, maxabs=3.55e-15
+('pos', 'EUROSTX'): n_diff=0 of 1513, maxabs=0
+('costs', 'EUROSTX'): n_diff=116 of 1465, maxabs=4.21
+('net', 'EUROSTX'): n_diff=116 of 1513, maxabs=4.21
+('fc', 'V2X'): n_diff=0 of 1824, maxabs=3.91e-14
+('pos', 'V2X'): n_diff=0 of 1824, maxabs=0
+('costs', 'V2X'): n_diff=477 of 1804, maxabs=21.8
+('net', 'V2X'): n_diff=477 of 1824, maxabs=21.8
+('fc', 'MXP'): n_diff=1 of 6338, maxabs=1.63e-08
+('pos', 'MXP'): n_diff=0 of 6338, maxabs=0
+('costs', 'MXP'): n_diff=868 of 6321, maxabs=40.6
+('net', 'MXP'): n_diff=868 of 6338, maxabs=40.6
+('fc', 'CORN'): n_diff=1 of 12315, maxabs=1.66e-08
+('pos', 'CORN'): n_diff=0 of 12315, maxabs=0
+('costs', 'CORN'): n_diff=2869 of 12298, maxabs=36.1
+('net', 'CORN'): n_diff=2869 of 12315, maxabs=36.1
+('costs', 'PORT'): n_diff=4882 of 12304, maxabs=59.7
+('net', 'PORT'): n_diff=4882 of 12315, maxabs=59.7

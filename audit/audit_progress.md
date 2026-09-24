@@ -54,11 +54,12 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P1A Phase 13 — Configuration / experiment infrastructure | COMPLETE (targeted; session 6; report §14: §39 items, precedence, versioning absence, O-P13-1…3, DV14) |
 | P1A Phase 10 — Data / contract / roll architecture | COMPLETE (session 7; report §11: data sources, two roll mechanisms R1/R2, multiple-price builder, Panama back-adjustment + EXP-05, carry, FX, shipped-data provenance, metadata, mutation table, PF-8 → POSSIBLE ISSUE, D01 → VERIFIED) |
 | **P1A (Phases 9–14)** | **COMPLETE — P1A STOP** (Phase 10 awaiting operator review) |
-| P1B, P2 | NOT STARTED |
+| P1B Phase 15 — Empirical causality | COMPLETE (session 8, operator-authorised Phase 15 only; report §16: EXP-06…EXP-11 + EXP-08b; PF-2/PF-1/PF-3/PF-4/O-P11-1/O-P9-1/O-P9-2 effects TESTED; PF-11 → CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED; PF-15 → NO ISSUE IDENTIFIED for positions/P&L) — **STOPPED BEFORE PHASE 16** |
+| P1B Phases 16–19, P2 | NOT STARTED |
 
-**Current phase:** P1A COMPLETE — **P1A STOP** (session 7, after Phase 10). P1B not started.
+**Current phase:** P1B Phase 15 COMPLETE — **STOPPED BEFORE PHASE 16** (session 8). Phases 16–19 not started.
 
-**Exact next task:** **STOP. Await an operator decision** on review of Phase 10 and whether and how to proceed to P1B (spec §40: Phases 15–19; cut order Phase 19 → Phase 15 depth → secondary validation). Do not start P1B without explicit approval.
+**Exact next task:** **STOP. Await operator authorization** after Phase 15 (report §16). Do not start Phase 16 (or 17–19) without explicit operator approval.
 
 ## Unresolved issues
 
@@ -98,11 +99,25 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 
 | EXP-04 | (Phase 14, PF-14) Does the daily resample label day *t*'s 23:00 price at 00:00 of day *t*, so that `reindex(ffill)` onto an hourly index exposes it to earlier hours of day *t*? | `scaffolding/experiments/exp04_daily_label_alignment.py` (synthetic 9-row series; repo's own `resample_prices_to_business_day_index` and `get_intraday_pdf_at_frequency`); output `exp04_output.txt` | Daily labels 00:00 hold 109/209/309 (the 23:00 values); hourly bars at 10:00/15:00 see 109/209/309 while hourly prices are 101/102, 201/202, 301/302. **Mechanism holds.** `audit/repo` stayed clean | TESTED |
 | EXP-05 | Does a later roll change earlier Panama-adjusted values and differences? | `scaffolding/experiments/exp05_panama_mutation.py` (synthetic 12-day multiple prices, framework stitcher; history before vs after a second roll) | Every earlier level shifted by the constant 8 (= day-10 FORWARD − PRICE). All earlier one-day differences unchanged. The roll-day difference = the new contract's own move. | TESTED (mechanism, synthetic) |
+| EXP-06 | (Phase 15, PF-2, **default**) Does removing post-C data change forecasts, positions, gross, costs or net P&L at dates ≤ C? | `scaffolding/experiments/exp06_pf2_cost_deflator.py`; output `exp06_output.txt` (chapter-15 system, shipped CSVs, C ∈ {2016-12-30, 2019-12-31}; 2009-12-31 pre-declared but could not run: EUROSTX has no data then; control `vol_normalise_currency_costs=False`) | Forecasts, positions, gross: 0 differing rows. Costs: one constant factor per instrument (0.66–1.98). Portfolio costs ≤ C: ratio 0.9961 (2016), 0.9326 (2019); net SR 0.4911/0.4911, 0.4856/0.4843. Control: 0 differences. **L4 only (costs, net P&L).** | TESTED |
+| EXP-07 | (PF-1, non-default scalar estimation) Which rows get the backfilled scalar, and what changes? | `exp07_pf1_scalar_backfill.py`; `exp07_output.txt` (backfill True vs False; control truncation 2019-12-31) | CORN only, 509 rows 1972-10-18…1974-09-30. Forecasts on 499 rows, positions on 502; on the differing rows gross is 419,295 vs −2,187.50. Full-sample net SR 0.4919 vs 0.4146. Control: 0 position differences; the only scalar difference is on the boundary row (~1e-8). **L1–L4, warm-up only.** | TESTED |
+| EXP-08 | (PF-3/PF-4, PF-11, non-default forecast-weight estimation) Grid-aligned truncation (C_A 2017-03-31), with and without optimiser costs; grid-moving truncation (2019-12-31) without costs | `exp08_pf3_pf4_pf11_forecast_weights.py`, `exp08_output.txt`; breakdown `exp08b_pf11_breakdown.py`, `exp08b_output.txt` (PF-2 off in all arms) | A (PF-3/PF-4): raw weights differ in 43/44 periods (max 0.16); positions differ (CORN 5,415 rows, max 5); net ≤ C +1.0%; net SR 0.5794 vs 0.5726. B (control): **0 differences everywhere**. C (PF-11): weights differ (to 0.2251 after 2000; 0.51 in 1975); positions differ (MXP max 7, CORN 64 in 1975, 4 after 2000); net SR 0.5617 vs 0.5484. **L1–L4.** | TESTED |
+| EXP-09 | (O-P11-1, non-default) Effect of counting stacked pooled rows as years in the handcraft SR tilt | `exp09_op11_1_years_of_data.py`, `exp09_output.txt` (in-process patch in script only: data_length / pooled_length) | Last fit: 303.7 vs 50.6 years. Raw weights differ in 50/51 periods (max 0.245). Positions differ (CORN 4,366 rows, max 9). Net SR 0.5677 vs 0.5647. **L1–L4; not look-ahead.** | TESTED |
+| EXP-10 | (PF-15, non-default P09) Do the bfilled per-contract values reach any P09 position or P&L? | `exp10_pf15_per_contract_bfill.py`, `exp10_output.txt` (P09 stage list on chapter-15 system + shipped CSVs; variant: bfilled rows × 2, in-process patch in script only; about 3 min per run) | Values changed on 2,573–10,801 pre-start rows (five instruments). Positions, gross, costs and net: **0 differing rows**. **L1 only.** | TESTED |
+| EXP-11 | (O-P9-1/O-P9-2, non-default order simulator) Gross P&L at simulator prices vs at fill prices for hourly limit orders; cost by side | `exp11_op9_limit_fill_accounting.py`, `exp11_output.txt` (provided hourly example, `use_limit_orders=True`, shipped CSVs, US10) | 1,843 fills. Framework gross 31,515.62 USD (identity reproduced exactly); at fill prices −129,875.00; gap −161,390.62. All fills are adverse to the fill-row price. Buys: slippage flag 0/919, 1.67 USD/contract. Sells: 924/924, 9.67 USD/contract. **Not look-ahead.** | TESTED |
 
 ## Estimation flags (defaults in `sysdata/config/defaults.yaml` @ 8958c49)
 
 use_forecast_scale_estimates: False (l.131) · use_forecast_div_mult_estimates: False (l.150) · use_forecast_weight_estimates: False (l.171) · use_instrument_div_mult_estimates: False (l.236) · use_instrument_weight_estimates: False (l.256) · use_SR_costs: False (l.300) · buffer_method: forecast (l.296) · capital_multiplier func: syscore.capital.fixed_capital (l.226) · production_capital_method: 'full' (l.74) · vol_normalise_currency_costs: True (l.301). EXP-01/02 ran with all estimation OFF (fixed values).
 
+
+**Phase 15 flags per experiment (ON / OFF; anything not listed = shipped chapter-15 config + defaults):**
+- EXP-06: all estimation OFF. `vol_normalise_currency_costs` ON (baseline) / OFF (control). `use_SR_costs` OFF. Capital `fixed_capital`.
+- EXP-07: `use_forecast_scale_estimates` ON (pooled, min_periods 500); `forecast_scalar_estimate.backfill` ON (baseline) / OFF (variant). Other estimation OFF. `vol_normalise_currency_costs` ON.
+- EXP-08 / 08b: `use_forecast_weight_estimates` ON (handcraft, pooled gross, pooled turnover, expanding, weekly); `forecast_weight_estimate.cost_multiplier` 2.0 (arm A) / 0.0 (arms B, C). Other estimation OFF. `vol_normalise_currency_costs` OFF in every arm.
+- EXP-09: `use_forecast_weight_estimates` ON (defaults, cost_multiplier 2.0). Other estimation OFF. `vol_normalise_currency_costs` ON.
+- EXP-10: all estimation OFF. P09 ON (dynamic optimisation stages; `small_system` defaults). `vol_normalise_currency_costs` ON.
+- EXP-11: all estimation OFF (the example's fixed values). Order simulator ON (hourly limit orders). `buffer_method: none` (example config). `vol_normalise_currency_costs` ON.
 ## Scratch modifications
 
 - `audit/repo`: editable install (`pip install -e`). Build metadata and a few `__pycache__` directories were created inside the scratch clone during setup and imports; `git status` in the clone remains clean (they are ignored by the repo's `.gitignore`). No source file was modified.
@@ -151,9 +166,13 @@ See report §3–§5, §8 and the Executive Summary. Key items: F1 zero→NaN→
 - F43: configuration is layered YAML (backtest config or list, with `base_config`) > `private_config.yaml` (outside the repo, `PYSYS_PRIVATE_CONFIG_DIR`) > `defaults.yaml`, merged recursively; `None` cannot override a default (O-P13-3); functions are named by dotted strings. No config/code versioning, content hash or git stamp was found (absence UNVERIFIED beyond the searched terms); production saves a pickled state plus the merged config per run (30-day retention).
 - F44: estimated parameters exist only in the cache unless exported; the export writes last values (O-P13-1), which the docs suggest merging into simulated configs. Comparison tools: account curves, `t_test`, `account_t_test` (DV14: documented import path wrong). No experiment registry or multiple-testing control found.
 
+**Phase 15 (report §16):**
+- F45: PF-2 is TESTED at L4 only in the default system: costs and net P&L change; forecasts, positions and gross do not. That also supports the default-position NO ISSUE IDENTIFIED answer at two cutoffs. PF-1 and PF-3/PF-4 are TESTED at L1–L4 (non-default). PF-11 moves from POSSIBLE to CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED; its post-T input is the sample end date only, since the grid-aligned control has zero differences. PF-15 moves from POSSIBLE to NO ISSUE IDENTIFIED for positions and P&L (L1 only).
+- F46: O-P11-1 changes weights, positions and P&L (303.7 vs 50.6 years at the last fit) and is not look-ahead. O-P9-1: for the provided hourly limit-order example on US10, the framework's gross is +31,516 USD against −129,875 at fill prices. O-P9-2: only sells pay slippage.
+
 ## Optional-phase status
 
-Phase 10: **ON HOLD** (operator decision after session 5; not started, not skipped). Phase 15: not started (Phases 7–8 and 11–12 ran no experiments; two INFERRED effects from Phase 11 are candidates for Phase 15; the Phase 8 flow trace was NOT TESTED because static reading was sufficient, §9.8) (EXP-01/02 are Signal-Contract/Stage checks, not causality tests; EXP-04 is a Phase 14 mechanism check, not a Phase 15 test; the effect sizes of the §15 CONFIRMED ISSUE items are Phase 15 candidates, §15.6). Phase 19: not started.
+Phase 10: COMPLETE (session 7; this line said ON HOLD until session 8, and was corrected here as a stale status). Phase 15: **COMPLETE** (session 8, operator-authorised; report §16; EXP-06…EXP-11). Earlier EXP-01…05 are contract, caching and mechanism checks, not Phase 15 tests. Phase 19: not started.
 
 ## Operator-reported usage / cost
 
@@ -165,11 +184,13 @@ Phase 10: **ON HOLD** (operator decision after session 5; not started, not skipp
 - Phase 11-12 (session 5): **UNRECORDED**
 - Phases 9/14/13 (session 6): **UNRECORDED** (the operator separately cited ≈ $8.56 for that session in the session 7 instructions, as an approximate platform figure; it is recorded here as quoted, not derived)
 - Phase 10 (session 7): **UNRECORDED**
+- Phase 15 (session 8): **UNRECORDED** (not estimated)
 - Operator-reported REMAINING Claude Code credit balance at session 5 start: $66 (reported by the operator in the session 5 instructions). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost; no consumed figure is derived from it.
 - Operator-reported REMAINING Claude Code credit balance: $81 (reported in session 2, 2026-09-24). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost. Consumed usage/cost for Phases 1–6 remains UNRECORDED (no reliable figure available; not to be estimated).
 
 ## Session log
 
+- Session 8 (Phase 15, operator-authorised; Phase 15 only). Start checks passed: branch head `3f65eef`, clean; clone `8958c49` clean; 134/134 checks; the existing venv was reused, with no setup attempt consumed. Ran EXP-06…EXP-11 plus the EXP-08b breakdown in scratch. Truncated CSV copies are under `scaffolding/home/p15data/` (git-ignored). Two variants use in-process patches inside the scripts only (EXP-09, EXP-10); no repository file was modified. Report §16 written; §15 not edited (supersessions in §16.10). Executive Summary bullets 11, 17, 18 and 20 and the status line updated. CSV: `last_phase` → 15 on E02, R01, R05, R08, R09, P09; nothing else. The stale "Phase 10: ON HOLD" optional-phase line was corrected. `check_consistency.py` updated for Phase 15. **STOPPED BEFORE PHASE 16.**
 - Session 7 (Phase 10, in the original container): operator approved Phase 10 after seeing the session-6 spend. Start checks passed (branch head `1df7ece`; clone `8958c49` clean, before and after; 127/127 checks before work; the existing venv was reused, no setup attempt consumed). Phase 10 completed (report §11). EXP-05 run (synthetic). CSV: D01 impl_evidence → VERIFIED; `last_phase` → 10 on C05, D01. PF-8 superseded (§11.10); D01 resolved (§11.11). **P1A STOP.**
 
 - Session 1 (2026-09-24): Phases 1–4; commit `bae290c`. The first push was blocked until the Claude GitHub App was installed on the fork, then succeeded.

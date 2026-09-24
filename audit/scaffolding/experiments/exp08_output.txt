@@ -1,0 +1,181 @@
+=== Level-1 cost inputs, full (X) vs truncated at C_A (Y), cost_multiplier 2.0 ===
+SR cost per trade SOFR: X=0.003162 Y=0.004342 ratio=0.7283
+SR cost per trade US10: X=0.001259 Y=0.001570 ratio=0.8017
+SR cost per trade EUROSTX: X=0.001156 Y=0.001194 ratio=0.9680
+SR cost per trade V2X: X=0.005771 Y=0.005511 ratio=1.0473
+SR cost per trade MXP: X=0.001714 Y=0.001253 ratio=1.3680
+SR cost per trade CORN: X=0.002043 Y=0.002579 ratio=0.7923
+turnover ('CORN', 'carry'): X=1.268 Y=1.198
+turnover ('CORN', 'ewmac16_64'): X=12.331 Y=12.330
+turnover ('CORN', 'ewmac2_8'): X=88.908 Y=89.534
+turnover ('CORN', 'ewmac32_128'): X=7.322 Y=7.299
+turnover ('CORN', 'ewmac4_16'): X=45.378 Y=45.620
+turnover ('CORN', 'ewmac64_256'): X=5.016 Y=4.918
+turnover ('CORN', 'ewmac8_32'): X=23.128 Y=23.231
+turnover ('EUROSTX', 'carry'): X=1.268 Y=1.198
+turnover ('EUROSTX', 'ewmac16_64'): X=12.331 Y=12.330
+turnover ('EUROSTX', 'ewmac2_8'): X=88.908 Y=89.534
+turnover ('EUROSTX', 'ewmac32_128'): X=7.322 Y=7.299
+turnover ('EUROSTX', 'ewmac4_16'): X=45.378 Y=45.620
+turnover ('EUROSTX', 'ewmac64_256'): X=5.016 Y=4.918
+turnover ('EUROSTX', 'ewmac8_32'): X=23.128 Y=23.231
+turnover ('MXP', 'carry'): X=1.268 Y=1.198
+turnover ('MXP', 'ewmac16_64'): X=12.331 Y=12.330
+turnover ('MXP', 'ewmac2_8'): X=88.908 Y=89.534
+turnover ('MXP', 'ewmac32_128'): X=7.322 Y=7.299
+turnover ('MXP', 'ewmac4_16'): X=45.378 Y=45.620
+turnover ('MXP', 'ewmac64_256'): X=5.016 Y=4.918
+turnover ('MXP', 'ewmac8_32'): X=23.128 Y=23.231
+turnover ('SOFR', 'carry'): X=1.268 Y=1.198
+turnover ('SOFR', 'ewmac16_64'): X=12.331 Y=12.330
+turnover ('SOFR', 'ewmac2_8'): X=88.908 Y=89.534
+turnover ('SOFR', 'ewmac32_128'): X=7.322 Y=7.299
+turnover ('SOFR', 'ewmac4_16'): X=45.378 Y=45.620
+turnover ('SOFR', 'ewmac64_256'): X=5.016 Y=4.918
+turnover ('SOFR', 'ewmac8_32'): X=23.128 Y=23.231
+turnover ('US10', 'carry'): X=1.268 Y=1.198
+turnover ('US10', 'ewmac16_64'): X=12.331 Y=12.330
+turnover ('US10', 'ewmac2_8'): X=88.908 Y=89.534
+turnover ('US10', 'ewmac32_128'): X=7.322 Y=7.299
+turnover ('US10', 'ewmac4_16'): X=45.378 Y=45.620
+turnover ('US10', 'ewmac64_256'): X=5.016 Y=4.918
+turnover ('US10', 'ewmac8_32'): X=23.128 Y=23.231
+turnover ('V2X', 'carry'): X=1.268 Y=1.198
+turnover ('V2X', 'ewmac16_64'): X=12.331 Y=12.330
+turnover ('V2X', 'ewmac2_8'): X=88.908 Y=89.534
+turnover ('V2X', 'ewmac32_128'): X=7.322 Y=7.299
+turnover ('V2X', 'ewmac4_16'): X=45.378 Y=45.620
+turnover ('V2X', 'ewmac64_256'): X=5.016 Y=4.918
+turnover ('V2X', 'ewmac8_32'): X=23.128 Y=23.231
+
+=== A: PF-3/PF-4, grid-aligned C_A, cost_multiplier 2.0 (X=full, Y=trunc) (dates <= 2017-03-31) ===
+period starts <= C identical: True (44 vs 44); last three: ['2014-04-03 00:00:00.000005', '2015-04-03 00:00:00.000005', '2016-04-02 00:00:00.000005'] vs ['2014-04-03 00:00:00.000005', '2015-04-03 00:00:00.000005', '2016-04-02 00:00:00.000005']
+SOFR     raw weights: maxabs=0.1596 rows differing=43/44 | daily weights: maxabs=0.0736 rows differing=8616/8616
+US10     raw weights: maxabs=0.0530 rows differing=43/44 | daily weights: maxabs=0.0380 rows differing=9025/9025
+EUROSTX  raw weights: maxabs=0.0223 rows differing=43/44 | daily weights: maxabs=0.0078 rows differing=797/797
+V2X      raw weights: maxabs=0.0173 rows differing=43/44 | daily weights: maxabs=0.0068 rows differing=1108/1108
+MXP      raw weights: maxabs=0.0669 rows differing=43/44 | daily weights: maxabs=0.0465 rows differing=5621/5621
+CORN     raw weights: maxabs=0.0760 rows differing=43/44 | daily weights: maxabs=0.0749 rows differing=11210/11598
+('fc', 'SOFR'): n_diff=7582/8616 maxabs=3.25
+('pos', 'SOFR'): n_diff=1871/8616 maxabs=2
+('gross', 'SOFR'): n_diff=1712/8616 maxabs=2950 sum X=450250.1 Y=453187.7
+('costs', 'SOFR'): n_diff=1146/8580 maxabs=19.24 sum X=-19249.7 Y=-18076.5
+('net', 'SOFR'): n_diff=2340/8616 maxabs=2950 sum X=431000.4 Y=435111.2
+('fc', 'US10'): n_diff=8136/9025 maxabs=1.335
+('pos', 'US10'): n_diff=477/9025 maxabs=1
+('gross', 'US10'): n_diff=441/9025 maxabs=3000 sum X=498359.4 Y=514539.1
+('costs', 'US10'): n_diff=478/8995 maxabs=19.34 sum X=-11923.3 Y=-11547.7
+('net', 'US10'): n_diff=731/9025 maxabs=3000 sum X=486436.1 Y=502991.3
+('fc', 'EUROSTX'): n_diff=785/797 maxabs=0.3368
+('pos', 'EUROSTX'): n_diff=28/797 maxabs=1
+('gross', 'EUROSTX'): n_diff=26/797 maxabs=909 sum X=-9050.2 Y=-9966.4
+('costs', 'EUROSTX'): n_diff=34/761 maxabs=9.422 sum X=-612.8 Y=-664.0
+('net', 'EUROSTX'): n_diff=47/797 maxabs=917.6 sum X=-9663.0 Y=-10630.5
+('fc', 'V2X'): n_diff=932/1108 maxabs=0.2173
+('pos', 'V2X'): n_diff=83/1108 maxabs=1
+('gross', 'V2X'): n_diff=79/1108 maxabs=217.3 sum X=28159.2 Y=28358.3
+('costs', 'V2X'): n_diff=94/1097 maxabs=6.349 sum X=-4494.6 Y=-4516.3
+('net', 'V2X'): n_diff=136/1108 maxabs=223.4 sum X=23664.6 Y=23841.9
+('fc', 'MXP'): n_diff=4725/5621 maxabs=1.775
+('pos', 'MXP'): n_diff=943/5621 maxabs=1
+('gross', 'MXP'): n_diff=842/5621 maxabs=1985 sum X=378630.6 Y=371899.4
+('costs', 'MXP'): n_diff=703/5550 maxabs=7.054 sum X=-8159.0 Y=-8262.7
+('net', 'MXP'): n_diff=1255/5621 maxabs=1980 sum X=370471.7 Y=363636.6
+('fc', 'CORN'): n_diff=10540/11598 maxabs=1.893
+('pos', 'CORN'): n_diff=5415/11598 maxabs=5
+('gross', 'CORN'): n_diff=4973/11598 maxabs=2000 sum X=843113.5 Y=799988.5
+('costs', 'CORN'): n_diff=2094/11583 maxabs=54.85 sum X=-126804.7 Y=-116831.9
+('net', 'CORN'): n_diff=5708/11598 maxabs=2011 sum X=716308.8 Y=683156.6
+('gross', 'PORT'): n_diff=6528/11598 maxabs=6050 sum X=2189462.6 Y=2158006.5
+('costs', 'PORT'): n_diff=3843/11587 maxabs=54.85 sum X=-171244.0 Y=-159899.2
+('net', 'PORT'): n_diff=7673/11598 maxabs=6072 sum X=2018218.6 Y=1998107.3
+PORT gross SR <= C: X=0.6286 Y=0.6184
+PORT net SR <= C: X=0.5794 Y=0.5726
+
+=== B: control, grid-aligned C_A, cost_multiplier 0.0 (X=full, Y=trunc) (dates <= 2017-03-31) ===
+period starts <= C identical: True (44 vs 44); last three: ['2014-04-03 00:00:00.000005', '2015-04-03 00:00:00.000005', '2016-04-02 00:00:00.000005'] vs ['2014-04-03 00:00:00.000005', '2015-04-03 00:00:00.000005', '2016-04-02 00:00:00.000005']
+SOFR     raw weights: maxabs=0.0000 rows differing=0/44 | daily weights: maxabs=0.0000 rows differing=0/8616
+US10     raw weights: maxabs=0.0000 rows differing=0/44 | daily weights: maxabs=0.0000 rows differing=0/9025
+EUROSTX  raw weights: maxabs=0.0000 rows differing=0/44 | daily weights: maxabs=0.0000 rows differing=0/797
+V2X      raw weights: maxabs=0.0000 rows differing=0/44 | daily weights: maxabs=0.0000 rows differing=0/1108
+MXP      raw weights: maxabs=0.0000 rows differing=0/44 | daily weights: maxabs=0.0000 rows differing=0/5621
+CORN     raw weights: maxabs=0.0000 rows differing=0/44 | daily weights: maxabs=0.0000 rows differing=0/11598
+('fc', 'SOFR'): n_diff=0/8616 maxabs=0
+('pos', 'SOFR'): n_diff=0/8616 maxabs=0
+('gross', 'SOFR'): n_diff=0/8616 maxabs=0 sum X=413062.7 Y=413062.7
+('costs', 'SOFR'): n_diff=0/8590 maxabs=1.421e-14 sum X=-25244.5 Y=-25244.5
+('net', 'SOFR'): n_diff=0/8616 maxabs=2.274e-13 sum X=387818.2 Y=387818.2
+('fc', 'US10'): n_diff=0/9025 maxabs=0
+('pos', 'US10'): n_diff=0/9025 maxabs=0
+('gross', 'US10'): n_diff=0/9025 maxabs=0 sum X=500156.3 Y=500156.3
+('costs', 'US10'): n_diff=0/8995 maxabs=7.105e-15 sum X=-14029.3 Y=-14029.3
+('net', 'US10'): n_diff=0/9025 maxabs=0 sum X=486126.9 Y=486126.9
+('fc', 'EUROSTX'): n_diff=0/797 maxabs=0
+('pos', 'EUROSTX'): n_diff=0/797 maxabs=0
+('gross', 'EUROSTX'): n_diff=0/797 maxabs=0 sum X=-11341.1 Y=-11341.1
+('costs', 'EUROSTX'): n_diff=0/762 maxabs=0 sum X=-738.5 Y=-738.5
+('net', 'EUROSTX'): n_diff=0/797 maxabs=0 sum X=-12079.6 Y=-12079.6
+('fc', 'V2X'): n_diff=0/1108 maxabs=0
+('pos', 'V2X'): n_diff=0/1108 maxabs=0
+('gross', 'V2X'): n_diff=0/1108 maxabs=0 sum X=18997.4 Y=18997.4
+('costs', 'V2X'): n_diff=0/1097 maxabs=1.421e-14 sum X=-4789.9 Y=-4789.9
+('net', 'V2X'): n_diff=0/1108 maxabs=0 sum X=14207.6 Y=14207.6
+('fc', 'MXP'): n_diff=0/5621 maxabs=0
+('pos', 'MXP'): n_diff=0/5621 maxabs=0
+('gross', 'MXP'): n_diff=0/5621 maxabs=0 sum X=363933.8 Y=363933.8
+('costs', 'MXP'): n_diff=0/5543 maxabs=0 sum X=-8599.8 Y=-8599.8
+('net', 'MXP'): n_diff=0/5621 maxabs=0 sum X=355333.9 Y=355333.9
+('fc', 'CORN'): n_diff=0/11598 maxabs=0
+('pos', 'CORN'): n_diff=0/11598 maxabs=0
+('gross', 'CORN'): n_diff=0/11598 maxabs=0 sum X=967063.5 Y=967063.5
+('costs', 'CORN'): n_diff=0/11583 maxabs=5.684e-14 sum X=-172748.1 Y=-172748.1
+('net', 'CORN'): n_diff=0/11598 maxabs=5.684e-14 sum X=794315.4 Y=794315.4
+('gross', 'PORT'): n_diff=0/11598 maxabs=0 sum X=2251872.5 Y=2251872.5
+('costs', 'PORT'): n_diff=0/11587 maxabs=5.684e-14 sum X=-226150.2 Y=-226150.2
+('net', 'PORT'): n_diff=0/11598 maxabs=5.684e-14 sum X=2025722.4 Y=2025722.4
+PORT gross SR <= C: X=0.6497 Y=0.6497
+PORT net SR <= C: X=0.5844 Y=0.5844
+
+=== C: PF-11, non-aligned C_M, cost_multiplier 0.0 (X=full, Y=trunc) (dates <= 2019-12-31) ===
+period starts <= C identical: False (47 vs 47); last three: ['2017-04-02 00:00:00.000005', '2018-04-02 00:00:00.000005', '2019-04-02 00:00:00.000005'] vs ['2017-01-05 00:00:00.000005', '2018-01-05 00:00:00.000005', '2019-01-05 00:00:00.000005']
+SOFR     raw weights: maxabs=0.0000 rows differing=0/1 | daily weights: maxabs=0.2251 rows differing=9333/9333
+US10     raw weights: maxabs=0.0000 rows differing=0/1 | daily weights: maxabs=0.2251 rows differing=9742/9742
+EUROSTX  raw weights: maxabs=0.0000 rows differing=0/1 | daily weights: maxabs=0.0105 rows differing=1513/1513
+V2X      raw weights: maxabs=0.0000 rows differing=0/1 | daily weights: maxabs=0.0076 rows differing=1824/1824
+MXP      raw weights: maxabs=0.0000 rows differing=0/1 | daily weights: maxabs=0.2251 rows differing=6338/6338
+CORN     raw weights: maxabs=0.0000 rows differing=0/1 | daily weights: maxabs=0.5074 rows differing=11989/12315
+('fc', 'SOFR'): n_diff=8512/9333 maxabs=6.504
+('pos', 'SOFR'): n_diff=1774/9333 maxabs=7
+('gross', 'SOFR'): n_diff=1633/9333 maxabs=2800 sum X=429575.1 Y=437025.1
+('costs', 'SOFR'): n_diff=1029/9304 maxabs=23.66 sum X=-26717.7 Y=-25874.9
+('net', 'SOFR'): n_diff=2175/9333 maxabs=2800 sum X=402857.4 Y=411150.2
+('fc', 'US10'): n_diff=8943/9742 maxabs=6.53
+('pos', 'US10'): n_diff=1410/9742 maxabs=3
+('gross', 'US10'): n_diff=1313/9742 maxabs=3844 sum X=510109.4 Y=494148.4
+('costs', 'US10'): n_diff=769/9691 maxabs=19.34 sum X=-14487.3 Y=-13751.4
+('net', 'US10'): n_diff=1729/9742 maxabs=3844 sum X=495622.1 Y=480397.0
+('fc', 'EUROSTX'): n_diff=1501/1513 maxabs=0.2338
+('pos', 'EUROSTX'): n_diff=9/1513 maxabs=1
+('gross', 'EUROSTX'): n_diff=9/1513 maxabs=808.2 sum X=-24304.3 Y=-25908.9
+('costs', 'EUROSTX'): n_diff=11/1473 maxabs=8.02 sum X=-1638.2 Y=-1653.5
+('net', 'EUROSTX'): n_diff=16/1513 maxabs=800.6 sum X=-25942.5 Y=-27562.4
+('fc', 'V2X'): n_diff=1520/1824 maxabs=0.3206
+('pos', 'V2X'): n_diff=201/1824 maxabs=1
+('gross', 'V2X'): n_diff=181/1824 maxabs=217.3 sum X=36658.2 Y=37738.6
+('costs', 'V2X'): n_diff=186/1809 maxabs=8.215 sum X=-8781.6 Y=-8749.1
+('net', 'V2X'): n_diff=290/1824 maxabs=223.4 sum X=27876.7 Y=28989.5
+('fc', 'MXP'): n_diff=5582/6338 maxabs=10.24
+('pos', 'MXP'): n_diff=1047/6338 maxabs=7
+('gross', 'MXP'): n_diff=967/6338 maxabs=9640 sum X=354123.8 Y=373569.4
+('costs', 'MXP'): n_diff=576/6259 maxabs=11.13 sum X=-9799.6 Y=-10083.1
+('net', 'MXP'): n_diff=1252/6338 maxabs=9635 sum X=344324.1 Y=363486.2
+('fc', 'CORN'): n_diff=11416/12315 maxabs=25.85
+('pos', 'CORN'): n_diff=5695/12315 maxabs=64
+('gross', 'CORN'): n_diff=5226/12315 maxabs=2.75e+04 sum X=954444.8 Y=915894.8
+('costs', 'CORN'): n_diff=2451/12296 maxabs=186.5 sum X=-174165.5 Y=-153653.6
+('net', 'CORN'): n_diff=5949/12315 maxabs=2.735e+04 sum X=780279.2 Y=762241.1
+('gross', 'PORT'): n_diff=6498/12315 maxabs=2.75e+04 sum X=2260607.0 Y=2232467.4
+('costs', 'PORT'): n_diff=4160/12304 maxabs=186.5 sum X=-235590.0 Y=-213765.7
+('net', 'PORT'): n_diff=7572/12315 maxabs=2.735e+04 sum X=2025017.0 Y=2018701.7
+PORT gross SR <= C: X=0.6271 Y=0.6065
+PORT net SR <= C: X=0.5617 Y=0.5484

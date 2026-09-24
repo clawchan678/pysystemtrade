@@ -1,0 +1,18 @@
+first three period starts X: ['1972-10-22', '1974-04-13', '1975-04-13']  Y: ['1972-10-22', '1974-01-16', '1975-01-16']
+SOFR: max weight diff 0.2251 on 2009-04-03; max position diff 7 on 1994-11-07
+   1980-2000: weight maxabs=0.1762, position rows differing=1109/4116, position maxabs=7
+   2000-C: weight maxabs=0.2251, position rows differing=665/5217, position maxabs=3
+US10: max weight diff 0.2251 on 2009-04-03; max position diff 3 on 1985-02-25
+   1980-2000: weight maxabs=0.1762, position rows differing=964/4525, position maxabs=3
+   2000-C: weight maxabs=0.2251, position rows differing=446/5217, position maxabs=1
+EUROSTX: max weight diff 0.0105 on 2014-03-13; max position diff 1 on 2015-09-28
+   2000-C: weight maxabs=0.0105, position rows differing=9/1513, position maxabs=1
+V2X: max weight diff 0.0076 on 2019-12-30; max position diff 1 on 2013-02-26
+   2000-C: weight maxabs=0.0076, position rows differing=201/1824, position maxabs=1
+MXP: max weight diff 0.2251 on 2009-04-03; max position diff 7 on 2008-09-10
+   1980-2000: weight maxabs=0.0829, position rows differing=109/1121, position maxabs=1
+   2000-C: weight maxabs=0.2251, position rows differing=938/5217, position maxabs=7
+CORN: max weight diff 0.5074 on 1975-01-16; max position diff 64 on 1975-01-20
+   1900-1980: weight maxabs=0.5074, position rows differing=1205/1879, position maxabs=64
+   1980-2000: weight maxabs=0.1762, position rows differing=3277/5219, position maxabs=22
+   2000-C: weight maxabs=0.2251, position rows differing=1213/5217, position maxabs=4

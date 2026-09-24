@@ -1,0 +1,55 @@
+baseline: last fit (fit_end 2023-04-01) data_length=15792.0 rows -> years_of_data=303.7 (pooled_length=6)
+variant: last fit (fit_end 2023-04-01) data_length=2632.0 rows -> years_of_data=50.6 (pooled_length=6)
+SOFR     raw weights: maxabs=0.1857, periods differing=50/51; daily weights maxabs=0.0963
+   last period raw weights baseline: {'ewmac16_64': 0.097, 'ewmac64_256': 0.182, 'ewmac8_32': 0.085, 'carry': 0.375, 'ewmac32_128': 0.199, 'ewmac4_16': 0.062, 'ewmac2_8': 0.0}
+   last period raw weights variant : {'ewmac16_64': 0.097, 'ewmac64_256': 0.183, 'ewmac8_32': 0.085, 'carry': 0.375, 'ewmac32_128': 0.199, 'ewmac4_16': 0.061, 'ewmac2_8': 0.0}
+US10     raw weights: maxabs=0.1127, periods differing=50/51; daily weights maxabs=0.1115
+   last period raw weights baseline: {'ewmac16_64': 0.097, 'ewmac64_256': 0.171, 'ewmac8_32': 0.089, 'carry': 0.357, 'ewmac32_128': 0.192, 'ewmac4_16': 0.095, 'ewmac2_8': 0.0}
+   last period raw weights variant : {'ewmac16_64': 0.097, 'ewmac64_256': 0.171, 'ewmac8_32': 0.089, 'carry': 0.358, 'ewmac32_128': 0.193, 'ewmac4_16': 0.093, 'ewmac2_8': 0.0}
+EUROSTX  raw weights: maxabs=0.1158, periods differing=50/51; daily weights maxabs=0.0031
+   last period raw weights baseline: {'ewmac16_64': 0.097, 'ewmac64_256': 0.17, 'ewmac8_32': 0.089, 'carry': 0.355, 'ewmac32_128': 0.192, 'ewmac4_16': 0.097, 'ewmac2_8': 0.0}
+   last period raw weights variant : {'ewmac16_64': 0.097, 'ewmac64_256': 0.171, 'ewmac8_32': 0.089, 'carry': 0.356, 'ewmac32_128': 0.193, 'ewmac4_16': 0.095, 'ewmac2_8': 0.0}
+V2X      raw weights: maxabs=0.2450, periods differing=50/51; daily weights maxabs=0.0124
+   last period raw weights baseline: {'ewmac16_64': 0.087, 'ewmac64_256': 0.187, 'ewmac8_32': 0.07, 'carry': 0.461, 'ewmac32_128': 0.19, 'ewmac4_16': 0.005, 'ewmac2_8': 0.0}
+   last period raw weights variant : {'ewmac16_64': 0.086, 'ewmac64_256': 0.184, 'ewmac8_32': 0.069, 'carry': 0.456, 'ewmac32_128': 0.188, 'ewmac4_16': 0.017, 'ewmac2_8': 0.0}
+MXP      raw weights: maxabs=0.1187, periods differing=50/51; daily weights maxabs=0.0294
+   last period raw weights baseline: {'ewmac16_64': 0.098, 'ewmac64_256': 0.178, 'ewmac8_32': 0.088, 'carry': 0.357, 'ewmac32_128': 0.197, 'ewmac4_16': 0.081, 'ewmac2_8': 0.0}
+   last period raw weights variant : {'ewmac16_64': 0.099, 'ewmac64_256': 0.179, 'ewmac8_32': 0.088, 'carry': 0.358, 'ewmac32_128': 0.198, 'ewmac4_16': 0.078, 'ewmac2_8': 0.0}
+CORN     raw weights: maxabs=0.1082, periods differing=50/51; daily weights maxabs=0.1061
+   last period raw weights baseline: {'ewmac16_64': 0.096, 'ewmac64_256': 0.175, 'ewmac8_32': 0.086, 'carry': 0.372, 'ewmac32_128': 0.193, 'ewmac4_16': 0.08, 'ewmac2_8': 0.0}
+   last period raw weights variant : {'ewmac16_64': 0.096, 'ewmac64_256': 0.175, 'ewmac8_32': 0.086, 'carry': 0.373, 'ewmac32_128': 0.193, 'ewmac4_16': 0.077, 'ewmac2_8': 0.0}
+('fc', 'SOFR'): n_diff=9413/10440 maxabs=3.14
+('pos', 'SOFR'): n_diff=1075/10440 maxabs=2
+('gross', 'SOFR'): n_diff=972/10440 maxabs=2950 sum B=457537.6 V=443450.1
+('costs', 'SOFR'): n_diff=710/10377 maxabs=22.63 sum B=-20070.2 V=-19903.6
+('net', 'SOFR'): n_diff=1367/10440 maxabs=2950 sum B=437467.4 V=423546.4
+('fc', 'US10'): n_diff=9978/10849 maxabs=4.488
+('pos', 'US10'): n_diff=859/10849 maxabs=2
+('gross', 'US10'): n_diff=790/10849 maxabs=6000 sum B=523765.6 V=536609.4
+('costs', 'US10'): n_diff=589/10800 maxabs=15.35 sum B=-12059.2 V=-11840.6
+('net', 'US10'): n_diff=1126/10849 maxabs=6000 sum B=511706.4 V=524768.8
+('fc', 'EUROSTX'): n_diff=2609/2621 maxabs=0.1139
+('pos', 'EUROSTX'): n_diff=17/2621 maxabs=1
+('gross', 'EUROSTX'): n_diff=16/2621 maxabs=1511 sum B=-22406.0 V=-19738.4
+('costs', 'EUROSTX'): n_diff=32/2568 maxabs=15.91 sum B=-2642.2 V=-2608.9
+('net', 'EUROSTX'): n_diff=38/2621 maxabs=1511 sum B=-25048.2 V=-22347.2
+('fc', 'V2X'): n_diff=2367/2932 maxabs=0.4133
+('pos', 'V2X'): n_diff=267/2932 maxabs=1
+('gross', 'V2X'): n_diff=247/2932 maxabs=376.6 sum B=41991.4 V=43201.0
+('costs', 'V2X'): n_diff=344/2921 maxabs=33.62 sum B=-18506.4 V=-18519.0
+('net', 'V2X'): n_diff=454/2932 maxabs=391.2 sum B=23485.0 V=24681.9
+('fc', 'MXP'): n_diff=6362/7445 maxabs=0.5899
+('pos', 'MXP'): n_diff=239/7445 maxabs=1
+('gross', 'MXP'): n_diff=221/7445 maxabs=1650 sum B=429738.1 V=434485.6
+('costs', 'MXP'): n_diff=257/7371 maxabs=34.24 sum B=-14206.7 V=-14196.7
+('net', 'MXP'): n_diff=383/7445 maxabs=1650 sum B=415531.4 V=420288.9
+('fc', 'CORN'): n_diff=12306/13422 maxabs=4.815
+('pos', 'CORN'): n_diff=4366/13422 maxabs=9
+('gross', 'CORN'): n_diff=4000/13422 maxabs=4500 sum B=921501.0 V=877338.5
+('costs', 'CORN'): n_diff=1712/13397 maxabs=50.33 sum B=-85742.2 V=-87625.8
+('net', 'CORN'): n_diff=4554/13422 maxabs=4500 sum B=835758.8 V=789712.7
+('gross', 'PORT'): n_diff=5017/13422 maxabs=9125 sum B=2352127.8 V=2315346.2
+('costs', 'PORT'): n_diff=3173/13411 maxabs=50.33 sum B=-153226.9 V=-154694.6
+('net', 'PORT'): n_diff=6083/13422 maxabs=9137 sum B=2198900.8 V=2160651.6
+PORT gross SR full sample: B=0.6073 V=0.6052
+PORT net SR full sample: B=0.5677 V=0.5647

@@ -1,0 +1,184 @@
+
+=== vol_normalise_currency_costs=True  cutoff=2016-12-30 ===
+ item     ins  n_diff     n  maxabs    sum_full   sum_trunc
+   fc    SOFR       0  8551       0     88818.9     88818.9
+  pos    SOFR       0  8551       0       57013       57013
+gross    SOFR       0  8551       0      471513      471513
+costs    SOFR     957  8524 45.8821    -13037.7    -18916.4
+  net    SOFR     957  8551 45.8821      458475      452596
+   fc    US10       0  8960       0     99768.7     99768.7
+  pos    US10       0  8960       0       27617       27617
+gross    US10       0  8960       0      538297      538297
+costs    US10     564  8911 8.49812    -6229.53    -7433.33
+  net    US10     564  8960 8.49812      532067      530864
+   fc EUROSTX       0   732       0     2389.28     2389.28
+  pos EUROSTX       0   732       0         650         650
+gross EUROSTX       0   732       0    -9328.59    -9328.59
+costs EUROSTX      36   682 2.80401    -292.418    -257.321
+  net EUROSTX      36   732 2.80401    -9621.01    -9585.91
+   fc     V2X       0  1043       0    -8647.98    -8647.98
+  pos     V2X       0  1043       0      -10519      -10519
+gross     V2X       0  1043       0     24272.8     24272.8
+costs     V2X     278  1031 87.7069    -6114.21    -3087.37
+  net     V2X     278  1043 87.7069     18158.6     21185.4
+   fc     MXP       0  5556       0     64154.9     64154.9
+  pos     MXP       0  5556       0       47743       47743
+gross     MXP       0  5556       0      424347      424347
+costs     MXP     711  5538 43.4127    -9377.45    -6311.05
+  net     MXP     711  5556 43.4127      414969      418036
+   fc    CORN       0 11533       0    -24069.3    -24069.3
+  pos    CORN       0 11533       0      -55401      -55401
+gross    CORN       0 11533       0      512378      512378
+costs    CORN    2643 11499 6.56723    -29248.4    -28544.1
+  net    CORN    2643 11533 6.56723      483130      483834
+gross    PORT       0 11533       0 1.96148e+06 1.96148e+06
+costs    PORT    4290 11521 87.7069    -64299.7    -64549.6
+  net    PORT    4290 11533 87.7069 1.89718e+06 1.89693e+06
+PORT gross: SR full=0.5078 trunc=0.5078
+PORT net: SR full=0.4911 trunc=0.4911
+  cost ratio full/trunc SOFR: min=0.689229 max=0.689229 (n=957)
+  cost ratio full/trunc US10: min=0.838054 max=0.838054 (n=564)
+  cost ratio full/trunc EUROSTX: min=1.136397 max=1.136397 (n=36)
+  cost ratio full/trunc V2X: min=1.980394 max=1.980394 (n=278)
+  cost ratio full/trunc MXP: min=1.485878 max=1.485878 (n=711)
+  cost ratio full/trunc CORN: min=1.024675 max=1.024675 (n=2643)
+  index rows in full[:C] absent from trunc:  {'SOFR': [], 'US10': [], 'EUROSTX': [], 'V2X': [], 'MXP': [], 'CORN': []}
+PORT costs full=-64299.75 trunc=-64549.58 ratio=0.9961; costs as % of gross: full=-3.28% trunc=-3.29%
+
+=== vol_normalise_currency_costs=True  cutoff=2019-12-31 ===
+ item     ins  n_diff     n      maxabs    sum_full   sum_trunc
+   fc    SOFR       0  9333           0     91616.4     91616.4
+  pos    SOFR       0  9333           0       58598       58598
+gross    SOFR       0  9333           0      481988      481988
+costs    SOFR    1022  9288     52.5357    -13466.2    -20418.6
+  net    SOFR    1022  9333     52.5357      468521      461569
+   fc    US10       0  9742           0      102562      102562
+  pos    US10       0  9742           0       28254       28254
+gross    US10       0  9742           0      545734      545734
+costs    US10     590  9685     9.04074    -6355.45       -7662
+  net    US10     590  9742     9.04074      539379      538072
+   fc EUROSTX       0  1513           0     8882.75     8870.22
+  pos EUROSTX       0  1513           0        3099        3094
+gross EUROSTX       0  1513           0     9383.06     9383.06
+costs EUROSTX     105  1465     4.50646    -866.576    -1021.52
+  net EUROSTX     105  1513     4.50646     8516.49     8361.54
+   fc     V2X       0  1824 3.19744e-14    -22260.1    -22240.1
+  pos     V2X       0  1824           0      -27790      -27759
+gross     V2X       0  1824  1.3074e-11     65362.6     65362.6
+costs     V2X     480  1801     22.7293    -11610.1    -10231.5
+  net     V2X     480  1824     22.7293     53752.6     55131.1
+   fc     MXP       0  6338           0     72621.5     72621.5
+  pos     MXP       0  6338           0       54026       54026
+gross     MXP       0  6338           0      428499      428499
+costs     MXP     816  6321     43.8663    -10244.8    -13629.8
+  net     MXP     816  6338     43.8663      418255      414870
+   fc    CORN       0 12315           0    -33774.8    -33774.8
+  pos    CORN       0 12315           0      -61788      -61788
+gross    CORN       0 12315           0      500660      500660
+costs    CORN    2715 12298     47.0455    -30021.2    -24842.4
+  net    CORN    2715 12315     47.0455      470638      475817
+gross    PORT       0 12315 1.31877e-11 2.03163e+06 2.03163e+06
+costs    PORT    4680 12304     62.5616    -72564.3    -77805.8
+  net    PORT    4680 12315     62.5616 1.95906e+06 1.95382e+06
+PORT gross: SR full=0.5036 trunc=0.5036
+PORT net: SR full=0.4856 trunc=0.4843
+  cost ratio full/trunc SOFR: min=0.659507 max=0.659507 (n=1022)
+  cost ratio full/trunc US10: min=0.829477 max=0.829477 (n=590)
+  cost ratio full/trunc EUROSTX: min=0.848320 max=0.848320 (n=105)
+  cost ratio full/trunc V2X: min=1.134738 max=1.134738 (n=480)
+  cost ratio full/trunc MXP: min=0.751646 max=0.751646 (n=816)
+  cost ratio full/trunc CORN: min=1.208467 max=1.208467 (n=2715)
+  index rows in full[:C] absent from trunc:  {'SOFR': [], 'US10': [], 'EUROSTX': ['2019-12-31'], 'V2X': ['2019-12-31'], 'MXP': [], 'CORN': []}
+PORT costs full=-72564.26 trunc=-77805.79 ratio=0.9326; costs as % of gross: full=-3.57% trunc=-3.83%
+
+=== vol_normalise_currency_costs=False  cutoff=2016-12-30 ===
+ item     ins  n_diff     n      maxabs    sum_full   sum_trunc
+   fc    SOFR       0  8551           0     88818.9     88818.9
+  pos    SOFR       0  8551           0       57013       57013
+gross    SOFR       0  8551           0      471513      471513
+costs    SOFR       0  8524 1.42109e-14    -14137.3    -14137.3
+  net    SOFR       0  8551           0      457375      457375
+   fc    US10       0  8960           0     99768.7     99768.7
+  pos    US10       0  8960           0       27617       27617
+gross    US10       0  8960           0      538297      538297
+costs    US10       0  8911           0    -6674.95    -6674.95
+  net    US10       0  8960           0      531622      531622
+   fc EUROSTX       0   732           0     2389.28     2389.28
+  pos EUROSTX       0   732           0         650         650
+gross EUROSTX       0   732           0    -9328.59    -9328.59
+costs EUROSTX       0   682           0    -247.511    -247.511
+  net EUROSTX       0   732           0     -9576.1     -9576.1
+   fc     V2X       0  1043           0    -8647.98    -8647.98
+  pos     V2X       0  1043           0      -10519      -10519
+gross     V2X       0  1043           0     24272.8     24272.8
+costs     V2X       0  1031 3.55271e-15    -4125.42    -4125.42
+  net     V2X       0  1043           0     20147.4     20147.4
+   fc     MXP       0  5556           0     64154.9     64154.9
+  pos     MXP       0  5556           0       47743       47743
+gross     MXP       0  5556           0      424347      424347
+costs     MXP       0  5538 7.10543e-15    -6664.89    -6664.89
+  net     MXP       0  5556 7.10543e-15      417682      417682
+   fc    CORN       0 11533           0    -24069.3    -24069.3
+  pos    CORN       0 11533           0      -55401      -55401
+gross    CORN       0 11533           0      512378      512378
+costs    CORN       0 11499           0    -46881.1    -46881.1
+  net    CORN       0 11533           0      465497      465497
+gross    PORT       0 11533           0 1.96148e+06 1.96148e+06
+costs    PORT       0 11521 1.42109e-14    -78731.2    -78731.2
+  net    PORT       0 11533 1.42109e-14 1.88275e+06 1.88275e+06
+PORT gross: SR full=0.5078 trunc=0.5078
+PORT net: SR full=0.4874 trunc=0.4874
+  cost ratio full/trunc SOFR: min=1.000000 max=1.000000 (n=957)
+  cost ratio full/trunc US10: min=1.000000 max=1.000000 (n=564)
+  cost ratio full/trunc EUROSTX: min=1.000000 max=1.000000 (n=36)
+  cost ratio full/trunc V2X: min=1.000000 max=1.000000 (n=278)
+  cost ratio full/trunc MXP: min=1.000000 max=1.000000 (n=711)
+  cost ratio full/trunc CORN: min=1.000000 max=1.000000 (n=2643)
+  index rows in full[:C] absent from trunc:  {'SOFR': [], 'US10': [], 'EUROSTX': [], 'V2X': [], 'MXP': [], 'CORN': []}
+PORT costs full=-78731.21 trunc=-78731.21 ratio=1.0000; costs as % of gross: full=-4.01% trunc=-4.01%
+
+=== vol_normalise_currency_costs=False  cutoff=2019-12-31 ===
+ item     ins  n_diff     n      maxabs    sum_full   sum_trunc
+   fc    SOFR       0  9333           0     91616.4     91616.4
+  pos    SOFR       0  9333           0       58598       58598
+gross    SOFR       0  9333           0      481988      481988
+costs    SOFR       0  9288 1.42109e-14    -14910.2    -14910.2
+  net    SOFR       0  9333           0      467077      467077
+   fc    US10       0  9742           0      102562      102562
+  pos    US10       0  9742           0       28254       28254
+gross    US10       0  9742           0      545734      545734
+costs    US10       0  9685           0    -6871.99    -6871.99
+  net    US10       0  9742           0      538862      538862
+   fc EUROSTX       0  1513           0     8882.75     8870.22
+  pos EUROSTX       0  1513           0        3099        3094
+gross EUROSTX       0  1513           0     9383.06     9383.06
+costs EUROSTX       0  1465 3.55271e-15    -931.216    -931.216
+  net EUROSTX       0  1513           0     8451.85     8451.85
+   fc     V2X       0  1824 3.19744e-14    -22260.1    -22240.1
+  pos     V2X       0  1824           0      -27790      -27759
+gross     V2X       0  1824  1.3074e-11     65362.6     65362.6
+costs     V2X       0  1801 2.84217e-14    -8370.89    -8370.89
+  net     V2X       0  1824  1.3074e-11     56991.7     56991.7
+   fc     MXP       0  6338           0     72621.5     72621.5
+  pos     MXP       0  6338           0       54026       54026
+gross     MXP       0  6338           0      428499      428499
+costs     MXP       0  6321           0    -7541.24    -7541.24
+  net     MXP       0  6338           0      420958      420958
+   fc    CORN       0 12315           0    -33774.8    -33774.8
+  pos    CORN       0 12315           0      -61788      -61788
+gross    CORN       0 12315           0      500660      500660
+costs    CORN       0 12298           0    -47874.6    -47874.6
+  net    CORN       0 12315           0      452785      452785
+gross    PORT       0 12315 1.31877e-11 2.03163e+06 2.03163e+06
+costs    PORT       0 12304 2.84217e-14    -86500.2    -86500.2
+  net    PORT       0 12315 1.31877e-11 1.94513e+06 1.94513e+06
+PORT gross: SR full=0.5036 trunc=0.5036
+PORT net: SR full=0.4822 trunc=0.4822
+  cost ratio full/trunc SOFR: min=1.000000 max=1.000000 (n=1022)
+  cost ratio full/trunc US10: min=1.000000 max=1.000000 (n=590)
+  cost ratio full/trunc EUROSTX: min=1.000000 max=1.000000 (n=105)
+  cost ratio full/trunc V2X: min=1.000000 max=1.000000 (n=480)
+  cost ratio full/trunc MXP: min=1.000000 max=1.000000 (n=816)
+  cost ratio full/trunc CORN: min=1.000000 max=1.000000 (n=2715)
+  index rows in full[:C] absent from trunc:  {'SOFR': [], 'US10': [], 'EUROSTX': ['2019-12-31'], 'V2X': ['2019-12-31'], 'MXP': [], 'CORN': []}
+PORT costs full=-86500.16 trunc=-86500.16 ratio=1.0000; costs as % of gross: full=-4.26% trunc=-4.26%
