@@ -1,0 +1,18 @@
+PASSED tests/test_examples.py::TestExamples::test_simple_system_rules
+PASSED tests/test_examples.py::TestExamples::test_simple_system_trading_rule
+PASSED tests/test_examples.py::TestExamples::test_simple_system_trading_rules_estimated
+PASSED tests/test_examples.py::TestExamples::test_simple_system_trading_rules_fixed
+PASSED tests/test_examples.py::TestExamples::test_simple_system_combing_rules
+PASSED tests/test_examples.py::TestExamples::test_simple_system_combining_and_estimating
+PASSED tests/test_examples.py::TestExamples::test_simple_system_combining_fixed
+PASSED tests/test_examples.py::TestExamples::test_simple_system_position_sizing
+PASSED tests/test_examples.py::TestExamples::test_simple_system_portfolio_estimated
+PASSED tests/test_examples.py::TestExamples::test_simple_system_portfolio_fixed
+PASSED tests/test_examples.py::TestExamples::test_simple_system_costs
+PASSED tests/test_examples.py::TestExamples::test_simple_system_config_object
+PASSED tests/test_examples.py::TestExamples::test_simple_system_risk_overlay
+PASSED tests/test_examples.py::TestExamples::test_simple_system_config_import
+PASSED tests/test_examples.py::TestExamples::test_prebaked_simple_system
+PASSED tests/test_examples.py::TestExamples::test_prebaked_from_confg
+PASSED tests/test_examples.py::TestExamples::test_prebaked_chapter15
+17 passed in 228.36s (0:03:48)

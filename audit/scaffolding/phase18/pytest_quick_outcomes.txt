@@ -1,0 +1,145 @@
+PASSED syscore/pandas/find_data.py::syscore.pandas.find_data.get_row_of_df_aligned_to_weights_as_dict
+PASSED syscore/pandas/find_data.py::syscore.pandas.find_data.get_row_of_series
+PASSED syscore/pandas/find_data.py::syscore.pandas.find_data.get_row_of_series_before_date
+PASSED syscore/pandas/frequency.py::syscore.pandas.frequency.closing_date_rows_in_pd_object
+PASSED syscore/pandas/frequency.py::syscore.pandas.frequency.get_intraday_pdf_at_frequency
+PASSED syscore/pandas/frequency.py::syscore.pandas.frequency.intraday_date_rows_in_pd_object
+PASSED syscore/pandas/frequency.py::syscore.pandas.frequency.merge_data_with_different_freq
+PASSED syscore/pandas/frequency.py::syscore.pandas.frequency.sumup_business_days_over_pd_series_without_double_counting_of_closing_data
+PASSED syscore/pandas/full_merge_with_replacement.py::syscore.pandas.full_merge_with_replacement.full_merge_of_existing_dataframe
+PASSED syscore/pandas/full_merge_with_replacement.py::syscore.pandas.full_merge_with_replacement.full_merge_of_existing_series
+PASSED syscore/pandas/list_of_df.py::syscore.pandas.list_of_df.stacked_df_with_added_time_from_list
+PASSED syscore/pandas/merge_data_keeping_past_data.py::syscore.pandas.merge_data_keeping_past_data._calculate_change_in_daily_units
+PASSED syscore/pandas/merge_data_with_label_column.py::syscore.pandas.merge_data_with_label_column._find_dates_when_label_changes
+PASSED syscore/pandas/merge_data_with_label_column.py::syscore.pandas.merge_data_with_label_column._find_dates_when_series_starts_matching
+PASSED syscore/pandas/merge_data_with_label_column.py::syscore.pandas.merge_data_with_label_column.merge_data_series_with_label_column
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.create_arbitrary_pdseries
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.dataframe_pad
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.from_dict_of_values_to_df
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.from_scalar_values_to_ts
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.get_column_names_in_df_with_at_least_one_value
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.get_index_of_columns_in_df_with_at_least_one_value
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.make_df_from_list_of_named_tuple
+PASSED syscore/pandas/pdutils.py::syscore.pandas.pdutils.remap_columns_in_pd
+PASSED syscore/pandas/strategy_functions.py::syscore.pandas.strategy_functions.apply_abs_min
+PASSED syscore/pandas/strategy_functions.py::syscore.pandas.strategy_functions.drawdown
+PASSED syscore/pandas/strategy_functions.py::syscore.pandas.strategy_functions.replace_all_zeros_with_nan
+PASSED syscore/pandas/strategy_functions.py::syscore.pandas.strategy_functions.spread_out_annualised_return_over_periods
+PASSED syscore/pandas/strategy_functions.py::syscore.pandas.strategy_functions.weights_sum_to_one
+PASSED syscore/pandas/strategy_functions.py::syscore.pandas.strategy_functions.years_in_data
+PASSED syscore/tests/test_algos.py::Test::test_robust_vol_calc_min_period
+PASSED syscore/tests/test_algos.py::Test::test_robust_vol_calc_min_value
+PASSED syscore/tests/test_dateutils.py::Test::test_data
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_path_absolute
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_path_absolute_trailing
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_path_absolute_dotted
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_path_relative
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_path_non_existent
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_dotted_dir_name
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_dotted_file_name
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_separate
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_combined
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_combined_dotted
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_module_separate
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_module_instr_data_module
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_module_combined
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_module_combined_dotted_filename_sep
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_resolve_path_and_filename_for_package_with_separate_dotted_file_name
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_csv_data
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_logging
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_config_defaults
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_control_config_defaults
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_private_config_dots
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_private_config_slash
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_strategy_config
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_pickled_backtest
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_ib_instrument_config
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_ib_fx_config
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_ib_trading_hours_config
+PASSED syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_email_store_filename
+PASSED sysdata/config/configdata.py::sysdata.config.configdata.Config.__delattr__
+PASSED sysdata/config/configdata.py::sysdata.config.configdata.Config.__init__
+PASSED sysdata/config/configdata.py::sysdata.config.configdata.Config.__setattr__
+PASSED sysdata/config/defaults.py::sysdata.config.defaults.get_system_defaults_dict
+PASSED sysdata/config/fill_config_dict_with_defaults.py::sysdata.config.fill_config_dict_with_defaults.fill_config_dict_with_defaults
+PASSED sysdata/tests/test_config.py::TestConfig::test_init_dict
+PASSED sysdata/tests/test_config.py::TestConfig::test_init_str
+PASSED sysdata/tests/test_config.py::TestConfig::test_init_list
+PASSED sysdata/tests/test_config.py::TestConfig::test_default
+PASSED sysdata/tests/test_config.py::TestConfig::test_custom_dir
+PASSED sysdata/tests/test_config.py::TestConfig::test_bad_custom_dir
+PASSED sysdata/tests/test_config.py::TestConfig::test_default_control
+PASSED sysdata/tests/test_config.py::TestConfig::test_control_custom_dir
+PASSED sysdata/tests/test_config.py::TestConfig::test_control_bad_custom_dir
+PASSED sysdata/tests/test_config.py::TestConfig::test_trading_hours_default
+PASSED sysdata/tests/test_config.py::TestConfig::test_trading_hours_custom
+PASSED sysdata/tests/test_config.py::TestConfig::test_trading_hours_bad_custom_dir
+PASSED sysinit/futures/tests/test_sysinit_futures.py::TestFuturesInit::test_build_roll_calendar
+PASSED sysinit/futures/tests/test_sysinit_futures.py::TestFuturesInit::test_check_saved_roll_calendar
+PASSED systems/tests/test_forecast_scale_cap.py::Test::test_get_forecast_cap
+PASSED systems/tests/test_forecasts.py::Test::testProcessTradingRuleSpec
+PASSED systems/tests/test_forecasts.py::Test::testinitTradingRules
+PASSED systems/tests/test_mp_optimise_over_time.py::Test::test_mp_optimisation
+PASSED systems/tests/test_mp_optimise_over_time.py::Test::test_pickling
+PASSED systems/tests/test_position_sizing.py::Test::test_get_daily_cash_vol_target
+PASSED sysobjects/production/position_limits.py::sysobjects.production.position_limits.apply_position_limit_to_single_leg_trade
+PASSED sysquant/optimisation/cleaning.py::sysquant.optimisation.cleaning.clean_list_of_weights
+PASSED sysquant/optimisation/full_handcrafting.py::sysquant.optimisation.full_handcrafting.get_avg_corr
+PASSED sysquant/tests/test_returns.py::Test::test_adjust_df_for_SR_costs_reduces_returns_across_all_columns
+PASSED sysquant/tests/test_returns.py::Test::test_negative_SR_cost_matches_analytic_expectation
+PASSED sysquant/tests/test_returns.py::Test::test_negative_SR_cost_reduces_every_days_return
+PASSED sysquant/tests/test_returns.py::Test::test_zero_SR_cost_leaves_returns_unchanged
+PASSED sysbrokers/IB/tests/test_combo_instrument_lookup.py::test_combo_uses_first_leg
+PASSED sysbrokers/IB/tests/test_combo_instrument_lookup.py::test_outright_contract_is_used_directly
+PASSED sysbrokers/IB/tests/test_combo_instrument_lookup.py::test_combo_without_resolved_legs_falls_back_to_itself
+PASSED tests/test_examples.py::TestExamples::test_simple_system_rules
+PASSED tests/test_examples.py::TestExamples::test_simple_system_trading_rule
+PASSED tests/test_examples.py::TestExamples::test_simple_system_trading_rules_estimated
+PASSED tests/test_examples.py::TestExamples::test_simple_system_trading_rules_fixed
+PASSED tests/test_examples.py::TestExamples::test_simple_system_combing_rules
+PASSED tests/test_examples.py::TestExamples::test_simple_system_combining_fixed
+PASSED tests/test_examples.py::TestExamples::test_simple_system_position_sizing
+SKIPPED [1] syscore/tests/test_fileutils.py:213: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:217: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:221: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:225: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:230: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:234: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:238: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:246: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:254: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:258: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:262: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:267: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:271: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:277: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:284: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:290: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:303: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:316: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:330: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:338: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:344: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:350: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:356: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:362: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:368: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:374: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:383: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:389: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:395: Only runs on windows
+SKIPPED [1] syscore/tests/test_fileutils.py:401: Only runs on windows
+SKIPPED [1] tests/test_examples.py:158: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:216: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:238: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:256: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:284: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:320: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:362: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:395: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:404: need --runslow option to run
+SKIPPED [1] tests/test_examples.py:414: need --runslow option to run
+XFAIL syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_package_module_combined_dotted_filename - Cannot work with old or new implementation
+XFAIL syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_resolve_path_and_filename_for_package_with_dotted_dir_name - Cannot work with old or new implementation
+XFAIL syscore/tests/test_fileutils.py::TestFileUtilsUnix::test_resolve_resolve_path_and_filename_for_package_with_dotted_file_name - Cannot work with old or new implementation
+101 passed, 40 skipped, 3 xfailed, 1 warning in 45.10s
