@@ -4,7 +4,7 @@ Audited commit: `pst-group/pysystemtrade` @ **`8958c49`** (`8958c49c38b1e4a8c07f
 All citations below are `path:lines @ 8958c49` unless stated otherwise.
 Evidence tags: VERIFIED / DOCUMENTED / INFERRED / HYPOTHESIS / UNVERIFIED (spec §12). The counterfactual tag `swap_evidence` is kept separate (spec §13).
 
-Status: **P0 complete (Phases 1–8, all approved). P1A in progress: Phases 11 and 12 complete** (session 5, intermediate stop chosen by the operator; not the P1A stop). Next: Phase 9, then 14, 13, 10.
+Status: **P0 complete (Phases 1–8, all approved). P1A in progress: Phases 11, 12 and 9 complete** (Phases 11–12 session 5, approved; Phase 9 session 6). Next: Phase 14, then 13. Phase 10 is ON HOLD (operator decision).
 
 ---
 
@@ -1108,7 +1108,115 @@ NOT TESTED — REASON: every §9 edge was settled by static reading of the call 
 | Earlier sections | not edited; DISC-1, DISC-2 raised for the operator | §9.7 |
 
 ## 10. Simulation / Backtest Architecture
-NOT YET AUDITED (P1A Phase 9).
+
+**Phase 9 status: COMPLETE** (session 6). Spec §39. All citations are `@ 8958c49`. The work was static source reading only; no experiment was run (§10.8). It builds on §2 "Engines", §3, §5 SC11/SC12, §8.1, §9 and §13.5–13.6; those are cited, not re-derived.
+
+**Evidence discipline.** U5 applies: new source read is recorded as observation; R03–R07 stay INFERRED. PF-n are cited here but classified only in §15.
+
+**Source read this phase** (on top of Phases 3–12):
+- accounts entry points: `systems/accounts/accounts_stage.py` (whole); `account_portfolio.py` (whole); `account_instruments.py` (whole); `account_subsystem.py:14-56`; `account_with_multiplier.py:19-40` (grep of the rest); `account_inputs.py:13-120`;
+- P&L calculators: `pandl_calculators/pandl_calculation.py` (whole); `pandl_using_fills.py` (whole); `pandl_generic_costs.py` (whole); `pandl_cash_costs.py` (whole); `sysobjects/fills.py:63-103`;
+- order simulator: `order_simulator/pandl_order_simulator.py` (whole); `simple_orders.py` (whole); `fills_and_orders.py` (whole); `account_curve_order_simulator.py` (whole); `hourly_market_orders.py` (whole); `hourly_limit_orders.py` (whole); `systems/provided/example/daily_with_order_simulation.{py,yaml}`, `hourly_with_order_simulator.yaml`;
+- reporting: `curves/account_curve.py:20-40,200-245` (+ method list); `curves/account_curve_group.py:1-80`;
+- data frequency: `sysdata/sim/sim_data.py:98-142`; `syscore/pandas/frequency.py:1-92,169-170,233-265`; `syscore/dateutils.py:595-660`; `positionsizing.py:86-131`; `account_buffering_subsystem.py:100-170`.
+
+### 10.1 End-to-end trace (spec §39: raw data → … → performance)
+
+| Step | Where | What happens | Time index | Evidence |
+|---|---|---|---|---|
+| Raw data | `simData.get_raw_price` → `daily_prices` | back-adjusted price (raw rows may carry intraday timestamps; daily closes are stamped at the notional closing time 23:00) → `resample("1B").last()` | 1B labels (one per business day) | `sim_data.py:98-127`; `frequency.py:169-170`; `dateutils.py:601-605` VERIFIED |
+| Hourly data (optional) | `simData.hourly_prices` | intraday rows only (rows at exactly 23:00 are dropped) → `resample("H").last()` → `dropna()` | hourly labels | `sim_data.py:129-142`; `frequency.py:45-92` VERIFIED |
+| Signal | Rules stage (A01/A02) | one call per (instrument, rule) over the whole history; zeros → NaN | index of the rule's input data | §5 SC1–SC4, SC9 VERIFIED |
+| Forecast | A04–A08 | scale, cap, ffill, weight, FDM, combined cap/mapping | forecast index; weights, FDM reindexed with ffill | §9.1 D5–D9 VERIFIED |
+| Portfolio | P01–P04 | vol scalar reindexed onto the forecast index with ffill (`positionsizing.py:126`); × instrument weight, × IDM, × optional risk scalar | forecast index | §9.1 D10–D13 VERIFIED |
+| Position | P05/P06 (+P07) | buffer edges; sequential buffered path (starts at the first optimal, NaN → 0); `buffer_method: none` → plain `round()` of the notional (`account_buffering_system.py:79-84`) | same | `account_buffering_subsystem.py:106-170` VERIFIED |
+| Fill | E01 (`pandlCalculationWithFills`) | positions `shift(1)` if `delayfill`, then `round()`; fills = non-zero, non-NaN `diff()` of that series, priced at the (ffilled) price of the fill row | fill at row *t+1* for a decision at *t* | `pandl_calculation.py:150-159`; `pandl_using_fills.py:48-70`; `fills.py:93-103` VERIFIED |
+| Cost | E02 | per inferred fill + roll pseudo-fills (opening and closing at `rolls_per_year` equal dates, qty = mean \|position\| over the preceding interval × `multiply_roll_costs_by`) × vol deflator (PF-2); or the SR-cost drag | fill dates | `pandl_cash_costs.py:68-203`; §13.2 VERIFIED |
+| Account | `pandlCalculation` | gross = `positions.shift(1) × Δprice` (after ffill of both) × point value × FX (ffill-reindexed); net = gross + costs (`add(..., fill_value=0)`); % = ÷ capital (fixed notional by default, or `get_actual_capital` = capital × multiplier `shift(1)` in `portfolio_with_multiplier`) | price index | `pandl_calculation.py:77-126,223-235`; `pandl_generic_costs.py:29-108`; `account_with_multiplier.py:19-40,108-131` VERIFIED |
+| P&L | `accountCurve` | a `pd.Series` subclass: the calculator's series summed into `Frequency.BDay` bins by default (`resample(...).sum()`) | business days | `account_curve.py:20-40`; `pandl_calculation.py:64-75` VERIFIED |
+| Performance | `accountCurve` / `accountCurveGroup` | Sharpe = (sum ÷ years) ÷ (period std × √periods per year); drawdown on `cumsum()`; Sortino, skew, hit rate, t-test etc.; the portfolio is the *sum* of instrument calculators (`summed_pandl_calculator`, `weighted=True`) | BDay, or weekly/monthly/annual views | `account_curve.py:200-392` (statistics methods); `account_curve_group.py:16-80`; `account_portfolio.py:20-66` VERIFIED |
+
+### 10.2 Spec §39 dimensions
+
+| Dimension | Implemented | Evidence |
+|---|---|---|
+| Time advancement | **None in the default engine.** There is no clock or bar loop. Every stage returns the whole history as one pandas object; "time" is the index. Only P06 (and, when enabled, `half_compounding`, the risk-series loop, the per-fit-period estimator loops, P09 and the order simulator §10.4) iterate over rows or periods | §2 Engines; §3; `account_buffering_subsystem.py:146-157` VERIFIED |
+| Recalculation | Lazy and pull-based: requesting a leaf (e.g. `accounts.portfolio()`) recursively computes and caches every upstream series. Nothing is recomputed incrementally. A new bar requires a new System (or cache deletion) and a full-history recomputation | §3 (Lazy evaluation) VERIFIED; `backtesting.md:1435` DOCUMENTED |
+| Caching | Per-System memo keyed on (stage, method, instrument, args); config and data are not in the key; protected items survive deletion; `base_system_cache` ignores arguments | §3; EXP-02 TESTED |
+| Estimation | Whole-history estimators produce per-row series or per-fit-period values that are reindexed onto the daily index (§8.1). Estimation is part of the same lazy tree, not a separate walk-forward driver | §8.1 Q3–Q14 |
+| Signal availability | Forecast at label *t* is treated as known at *t* (SC11). The framework does not lag the forecast; lagging is done in P&L | SC11 VERIFIED |
+| Position timing | Position at label *t* is decided with data labelled ≤ *t*; with `delayfill=True` it is held from *t+1* | `pandl_calculation.py:150-159` VERIFIED |
+| Fills | Inferred from position changes (vectorised), one fill per changed row, at the single aligned price of that row. No partial fills, queue, latency or intrabar path | `fills.py:93-103`; §13.6 item 4 VERIFIED |
+| Costs | Attached to fills (cash) or as a smooth SR drag; never fed back into the same run's positions (default) | §13.1–§13.4 VERIFIED |
+| Account state | P&L in points → instrument currency → base currency → % of capital. **No cash balance, margin, financing or interest model was found** (searched `systems/` for `margin`; `systems/accounts` for `interest`, `cash_balance`, `funding`: no hits; absence UNVERIFIED beyond these terms). Capital is either the fixed notional or a multiplier path (P07) | `pandl_calculation.py:77-126` VERIFIED |
+| Risk | Ex-ante: vol targeting (P01) and the optional risk overlay (P04). Ex-post: the curve statistics above. No risk-based stop or intra-period risk check exists in the backtest (the backtest has no intra-period time) | §9.1 D10/D13; `account_curve.py` VERIFIED |
+| P&L | `positions.shift(1) × price.diff()` after `delayfill` shift: a position decided at close *t* is filled at the *t+1* price and earns returns from close *t+1* onward (default) | `pandl_calculation.py:223-235` VERIFIED static (Phase 16 traces it) |
+| Reporting | `accountCurve` statistics; `accountCurveGroup` per-instrument / per-rule views; gross / net / costs curves | `account_curve.py`; `account_curve_group.py` VERIFIED |
+
+### 10.3 Architecture classification (spec §39 vocabulary)
+
+- **Vectorised, whole-history, daily-bar driven, pull-based (lazy), memoised.** VERIFIED (§3, §10.2).
+- **Hybrid in two places.** (i) P06 is a stateful per-row loop inside an otherwise vectorised tree (default); (ii) the optional order simulator (§10.4) replaces vectorised fill inference with a per-row stateful order/fill loop. VERIFIED.
+- **Not event-driven.** No event queue, callbacks, clock or order book was found in `systems/`; the order simulator iterates over an index but does not dispatch events. VERIFIED for the files read; wider absence is INFERRED.
+- **Stateless at the rule level, stateful only in path loops.** Rules receive no position or fill state (SC5). Path state exists only in P06, `half_compounding`, P09 and the order simulator (all but P06 non-default). VERIFIED.
+- **Frequency.** Daily (1B) by default. An hourly path exists: `get_hourly_prices`, P&L price lookup for hourly positions (`account_inputs.py:35-60`), and the hourly order simulators. Calibration statistics remain business-day based (SC12). VERIFIED.
+- **Live engine.** A daily re-run of the same System, with the last row used as the decision (§9.5). This is the same vectorised engine, not a separate live event engine. VERIFIED.
+
+### 10.4 Alternative accounts stage: the order simulator (not in the inventory; undocumented)
+
+- **What it is.** `AccountWithOrderSimulator(Account)` overrides `pandl_for_instrument`, `pandl_for_subsystem`, `get_buffered_position` and `get_buffered_subsystem_position` (`account_curve_order_simulator.py:14-175`). The header comment of the example says: "HOW TO USE A PROPER ORDER SIMULATOR RATHER THAN VECTORISED P&L" (`daily_with_order_simulation.py:1-2`). VERIFIED.
+- **Loop.** `generate_positions_orders_and_fills_from_series_data` walks the index up to the penultimate row. At row *i* it reads the unrounded optimal position at *i*, submits `round(optimal_i) − current` as an order dated *i*, and fills it at row *i+1* at the *i+1* price (market orders). The position series is the cumulative fill path (`pandl_order_simulator.py:169-269`). Stateful, path-dependent. VERIFIED.
+- **Buffering is bypassed.** The simulator's input is `get_notional_position` (instrument) or `get_subsystem_position` (subsystem), unbuffered (`account_curve_order_simulator.py:157-165`); the example configs set `buffer_method: 'none'` with the comment "not used with order sim" (`daily_with_order_simulation.yaml:5`). VERIFIED.
+- **Restrictions.** It raises unless `roundpositions=True`, `delayfill=True` and cash costs are used (`:178-188`). VERIFIED.
+- **Hourly variants.** `HourlyOrderSimulatorOfMarketOrders` uses hourly prices; `HourlyOrderSimulatorOfLimitOrders` submits a limit at the *current* price and fills at that limit only if the *next* price is strictly better (buy: limit > next; sell: limit < next), otherwise no fill (`hourly_limit_orders.py:36-65`; `fills_and_orders.py:64-88`). VERIFIED.
+- **Observations (VERIFIED code; effects INFERRED, not tested):**
+  - O-P9-1: gross P&L is computed from the positions implied by the fills against the simulator's price series (`order_simulator.prices()`), not against the fill prices. The `merge_fill_prices_with_prices` helper exists but is not called on this path (`pandl_using_fills.py:36-46,94-114`; `account_curve_order_simulator.py:99-137`). So a limit fill's price difference versus the bar price is reflected only in costs, not in gross P&L (INFERRED from the call path).
+  - O-P9-2: the limit-fill `price_requires_slippage_adjustment` flag is `False` for buys and `True` for sells (`fills_and_orders.py:70-86`). Recorded without judgement; the intent is not documented.
+  - O-P9-3: the example header refers to "a simple trend system using daily data"; the rule `ewmac_forecast_with_defaults` used in the hourly example config is docstring-labelled "Assumes that 'price' is daily data" and "ONLY USED FOR EXAMPLES" (`rules/ewmac.py:4-12`), while the hourly config feeds it `rawdata.get_hourly_prices`. Its Lfast/Lslow are then in hours. VERIFIED (code and config); consequences INFERRED.
+- **Documentation.** `docs/*.md` searched for `order simulat`, `order_simulat`, `vectorised`, `vectorized`, `event.driven`, `event driven`: no hits. Recorded as **UD5** (undocumented).
+- **Inventory.** Not a CSV row (the CSV is held at 41 rows by operator decision). It sits in `systems/accounts/order_simulator/*`, next to E01/P06, and is noted here and in the register only. See §10.9.
+
+### 10.5 Mixed-frequency alignment (input for §15)
+
+- Daily series are labelled at 00:00 of day *t* but hold the last price of day *t* (1B resample of rows stamped up to 23:00). In a daily-only System all series share these labels, so SC11 ("value at *t* known at close *t*") is internally consistent.
+- When the forecast index is hourly (hourly rules), daily-derived series are aligned onto it by `reindex(..., method="ffill")`: the vol scalar (`positionsizing.py:126`), weights, FDM, IDM (§10.1). A daily value labelled 00:00 of day *t* is then applied to every hourly bar of day *t*, including bars before that day's close. This is recorded as **PF-14 (new candidate)** and classified in §15. VERIFIED (alignment code); the label position of `resample("1B")` is checked in §15 (EXP-04).
+
+### 10.6 Assumptions relevant to higher-frequency transfer (identified only; no replacement designed)
+
+1. **Whole-history recomputation per decision.** No incremental update path; each new bar means recomputing (or re-running) the full tree. Live does exactly this once per run (PF-9). VERIFIED.
+2. **Single price per bar** for fills, P&L and costs; fills at the next bar's price; no partial fills, queue, latency or intrabar sequencing (also §13.6 item 4). VERIFIED.
+3. **One-bar delay is the only execution lag** (`delayfill` shifts by one *row*, whatever the row frequency). VERIFIED.
+4. **Business-day calibration** of vol, turnover, SR costs and weights (SC12) even when the forecast index is hourly; performance statistics default to BDay bins. VERIFIED.
+5. **Daily-to-intraday alignment by ffill of 00:00 labels** (§10.5, PF-14). VERIFIED code.
+6. **Buffering is a per-row path over the decision index**; in the order simulator it is bypassed (trade every change in the rounded optimum). VERIFIED.
+7. **No account state beyond capital** (no margin or financing; absence UNVERIFIED beyond the searched terms).
+8. **No event channel.** Stops, targets, entry/exit events cannot be expressed at the engine level (SC14/SC16). VERIFIED.
+
+### 10.7 Documentation / implementation items
+
+- **UD5** (new): the order-simulator accounts stage and its hourly market/limit variants are undocumented in `docs/` (search above). VERIFIED.
+- No new DV item. The docs' description of a daily-lagged P&L is consistent with the code (`delayfill` docstrings: "Lag fills by one day", `account_portfolio.py:14`; for hourly positions the lag is one hourly row, INFERRED from `_process_positions`).
+
+### 10.8 Experiments
+
+NOT TESTED — REASON: every Phase 9 question (loop structure, fill inference, P&L formula, reporting frequency, order-simulator control flow) was settled by static reading (spec §22). The quantitative effect of O-P9-1/O-P9-2 would need a controlled run with hourly data, which is not bundled in the csv sim data (hourly data availability was not checked; UNVERIFIED). Left for Phase 15/16 subject to operator approval.
+
+### 10.9 Phase 9 change log (explicit)
+
+| Item | Change | Basis |
+|---|---|---|
+| CSV `last_phase` | → 9 for C01, C02, C03, C05, E01 (the engine rows traced in §10.1–§10.3) | Traced in Phase 9 |
+| CSV other fields | **unchanged** (R03–R07 stay INFERRED; D01/E05 stay UNVERIFIED; E06 unchanged; transfer labels `NOT YET ASSESSED`) | U5; operator instructions |
+| CSV rows | **none added** (41 rows kept). The order simulator (§10.4) is *not* inventoried; raised for the operator as DISC-3 below | Operator: CSV fixed at 41 rows |
+| Divergence register | UD5 added | §10.4 |
+| Pre-flags | PF-14 candidate added (unclassified here) | §10.5 |
+| Earlier sections | not edited | — |
+
+**Discrepancy for the operator (NOT edited):**
+
+| # | Location | Statement | Finding |
+|---|---|---|---|
+| DISC-3 | §2 "Engines"; §4 layer table; Card 12 | §2 says "In the default configuration the only path-dependent per-period loop is the buffered position path P06" and lists the other loops; §4 says "P06 is the only path-dependent step in the backtest" | Both are correct for the default configuration, but neither list names the order simulator's per-row fill loop (`pandl_order_simulator.py:169-212`), which is a further path-dependent loop in an alternative accounts stage (non-default). §4's unqualified wording ("the only path-dependent step in the backtest") is not limited to the default configuration. VERIFIED (code) |
 
 ## 11. Data / Contract / Roll Architecture
 NOT YET AUDITED (P1A Phase 10).
@@ -1411,3 +1519,4 @@ Evidence gaps G1–G8 and unresolved issues U1–U7 are listed in `audit_progres
 | UD2 | (undocumented) | base_system_cache ignores arguments | TESTED (EXP-02) |
 | UD3 | (undocumented) | `positionLimit.minimum_position_limit` returns `other.no_limit` (a bool, `False`) when the instrument has no limit but the instrument-strategy does; reaches only the dynamic-optimised live strategy's maximum-position input (`controls.py:578-592`; `dynamic_optimised_positions.py:289-322`). Downstream numeric treatment INFERRED | VERIFIED (return value) |
 | UD4 | (undocumented) | Commission = **max**(per-block × \|qty\|, per-trade, percentage × value), not a sum (`instruments.py:365-373`); the docs list the three types without the combination rule (searched the `backtesting.md` costs section and `instruments.md` for max/maximum/largest) | VERIFIED |
+| UD5 | (undocumented) | The order-simulator accounts stage `AccountWithOrderSimulator` and its hourly market/limit variants (`systems/accounts/order_simulator/*`; examples `systems/provided/example/{daily,hourly}_with_order_simulation*`) replace vectorised fill inference with a per-row order/fill loop and bypass buffering. `docs/*.md` searched for `order simulat`, `order_simulat`, `vectorised`, `vectorized`, `event.driven`, `event driven`: no hits (Phase 9, §10.4) | VERIFIED |
