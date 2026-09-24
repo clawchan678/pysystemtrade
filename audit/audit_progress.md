@@ -52,12 +52,13 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P1A Phase 9 — Simulation / backtest architecture | COMPLETE (session 6; report §10: end-to-end trace, §39 dimensions, classification, order simulator UD5, PF-14 candidate, DISC-3) |
 | P1A Phase 14 — Static causality / look-ahead | COMPLETE (session 6; report §15: central question answered per configuration; PF-1…PF-15 and N1–N14 classified; EXP-04 TESTED) |
 | P1A Phase 13 — Configuration / experiment infrastructure | COMPLETE (targeted; session 6; report §14: §39 items, precedence, versioning absence, O-P13-1…3, DV14) |
-| P1A Phase 10 | ON HOLD (operator decision; not started, not skipped) |
+| P1A Phase 10 — Data / contract / roll architecture | COMPLETE (session 7; report §11: data sources, two roll mechanisms R1/R2, multiple-price builder, Panama back-adjustment + EXP-05, carry, FX, shipped-data provenance, metadata, mutation table, PF-8 → POSSIBLE ISSUE, D01 → VERIFIED) |
+| **P1A (Phases 9–14)** | **COMPLETE — P1A STOP** (Phase 10 awaiting operator review) |
 | P1B, P2 | NOT STARTED |
 
-**Current phase:** P1A in progress (session 6). Phases 11 and 12 are complete and approved (session 5 ended at an intermediate stop chosen by the operator; this is not the P1A stop). Phases 9, 14 and 13 are complete (session 6). Phase 10 is ON HOLD (operator decision).
+**Current phase:** P1A COMPLETE — **P1A STOP** (session 7, after Phase 10). P1B not started.
 
-**Exact next task:** **Operator decision on Phase 10 (data / contract / roll, report §11) based on actual spend; then the P1A STOP.** Do not start Phase 10 before that decision; do not mark it skipped or cut. Do not start P1B.
+**Exact next task:** **STOP. Await an operator decision** on review of Phase 10 and whether and how to proceed to P1B (spec §40: Phases 15–19; cut order Phase 19 → Phase 15 depth → secondary validation). Do not start P1B without explicit approval.
 
 ## Unresolved issues
 
@@ -75,7 +76,7 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 - G1: **CLOSED in Phase 11** at code level (report §12.2: optimiser numerics, equalisation, SR tilt, cleaning, pooled correlation). Classification is unchanged: R03/R05/R06 INFERRED (U5). History: PARTLY ADDRESSED in Phases 5 and 7 (Phase 7: cleaning path and `< fit_end` selection in the mean/stdev estimators read; remaining: per-method optimiser numerics, Phase 11). The DM formula and correlation sampling were read directly (observations in Cards 8/11). Their classification stays INFERRED per §12 (U5). Still open: optimiser internals (`sysquant/optimisation/*`), pooled forecast correlation, and the correlation `cleaning` path (Phases 6/11/14).
 - G2: **CLOSED in Phase 7** (`calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` read, report §8.3 O7/O9). Previously PARTLY CLOSED: The overlay formula and default-off wiring are VERIFIED. `calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` are not read.
 - G3: **CLOSED in Phase 7** (`pandl_SR_cost.py` read, report §8.3 O10). Previously PARTLY CLOSED: Cash-cost model and SR cost per trade VERIFIED. `pandl_SR_cost.py` not read (Phase 12).
-- G6: **P09 core read in Phase 11** (report §12.4; CSV P09 impl_evidence → VERIFIED, logged §13.9); remaining P09 files are PARTIALLY AUDITED — RESOURCE PRIORITY. D01 is still UNVERIFIED. History: **P07 closed in Phase 7** (code read; CSV impl_evidence UNVERIFIED → VERIFIED, logged in report §8.6). D01 data/roll construction and P09 dynamic optimisation remain UNVERIFIED (P09's greedy integer search and speed control were confirmed to exist in Phase 6; still PARTIALLY AUDITED).
+- G6: **D01 addressed in Phase 10** (report §11.11; CSV D01 impl_evidence UNVERIFIED → VERIFIED, logged §11.13). Still UNVERIFIED: shipped historical CSV construction, live roll-status (R2) trigger internals, Parquet/Mongo paths. Earlier: **P09 core read in Phase 11** (report §12.4; CSV P09 impl_evidence → VERIFIED, logged §13.9); remaining P09 files are PARTIALLY AUDITED — RESOURCE PRIORITY. D01 is still UNVERIFIED. History: **P07 closed in Phase 7** (code read; CSV impl_evidence UNVERIFIED → VERIFIED, logged in report §8.6). D01 data/roll construction and P09 dynamic optimisation remain UNVERIFIED (P09's greedy integer search and speed control were confirmed to exist in Phase 6; still PARTIALLY AUDITED).
 - G7: **CLOSED in Phase 11** (report §12.3; UD3). The only call site feeds the dynamic-optimised live strategy's maximum positions. History: (Phase 6) `positionLimit.minimum_position_limit` returns a bool when `self.no_limit` (`position_limits.py:21-28`); call-site effect still UNVERIFIED. **Phase 7:** the correlation `cleaning` path was read (report §8.3 O8): it fills from the same matrix's average or 0.99, with must-haves from `[fit_start:fit_end]`. No use of data after `fit_end` was observed; R03/R07 stay INFERRED (U5).
 - G8 (Phase 7): production scheduling (`syscontrol`) of `run_systems` vs `run_strategy_order_generator`, and any age/staleness check on stored optimal positions, is UNVERIFIED. Searched `sysexecution/`, `sysproduction/strategy_code/`, `run_strategy_order_generator.py`, `sysproduction/data/optimal_positions.py` for `stale|too old|max_age|days_old`; "stale" there means config-listed instruments or strategies only.
 - G4: Production and execution (sysexecution, sysbrokers, sysproduction) were mapped only at the entry-point level (Phase 19 optional). **Phase 8:** §9.5 L1–L5 traced the production flow down to broker-order creation. Stacks, algos and IB internals (E05) are still UNVERIFIED.
@@ -84,6 +85,8 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 - G11 (Phase 9): the order-simulator effects (O-P9-1 gross P&L at bar prices, O-P9-2 limit-fill slippage flags) are INFERRED, not tested; whether the bundled csv data contains intraday rows for the hourly path was not checked (UNVERIFIED).
 - G12 (Phase 14): the derivation (method and data period) of the shipped fixed parameters in `futuresconfig.yaml` is not stated in the repository (N9, UNVERIFIED); PF-8 (roll/back-adjustment) stays UNVERIFIED pending the Phase 10 decision.
 - G5: The P&L fill-timing reading (`delayfill`) is static only (Phase 16 will trace it empirically).
+
+- G11 (Phase 10): the effect size of availability-based roll dating (R1) on real data cannot be tested from shipped data (raw contract prices are not shipped): UNVERIFIED. User-written rules that consume adjusted-price *levels* are not covered by the PF-8(a) verdict.
 
 ## Empirical tests
 
@@ -94,6 +97,7 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | EXP-03 | Can a rule return a Tx1 DataFrame, as the docs state? | inline: `pd.Series(<Tx1 DataFrame>)` under pandas 2.1.3 | `ValueError: The truth value of a DataFrame is ambiguous` at the `pd.Series(result)` coercion step. End-to-end failure through `Rules.get_raw_forecast` is INFERRED, not run. | TESTED (coercion step only) |
 
 | EXP-04 | (Phase 14, PF-14) Does the daily resample label day *t*'s 23:00 price at 00:00 of day *t*, so that `reindex(ffill)` onto an hourly index exposes it to earlier hours of day *t*? | `scaffolding/experiments/exp04_daily_label_alignment.py` (synthetic 9-row series; repo's own `resample_prices_to_business_day_index` and `get_intraday_pdf_at_frequency`); output `exp04_output.txt` | Daily labels 00:00 hold 109/209/309 (the 23:00 values); hourly bars at 10:00/15:00 see 109/209/309 while hourly prices are 101/102, 201/202, 301/302. **Mechanism holds.** `audit/repo` stayed clean | TESTED |
+| EXP-05 | Does a later roll change earlier Panama-adjusted values and differences? | `scaffolding/experiments/exp05_panama_mutation.py` (synthetic 12-day multiple prices, framework stitcher; history before vs after a second roll) | Every earlier level shifted by the constant 8 (= day-10 FORWARD − PRICE). All earlier one-day differences unchanged. The roll-day difference = the new contract's own move. | TESTED (mechanism, synthetic) |
 
 ## Estimation flags (defaults in `sysdata/config/defaults.yaml` @ 8958c49)
 
@@ -159,11 +163,14 @@ Phase 10: **ON HOLD** (operator decision after session 5; not started, not skipp
 - Phase 7 (session 3): **UNRECORDED**. Claude Code cannot see account-level usage and has not estimated it; the operator will supply the figure. Budget plan (spec §18): P0 35%, P1A 40%, P1B 15%, reserve 10%.
 - Phase 8 (session 4): **UNRECORDED** (not estimated).
 - Phase 11-12 (session 5): **UNRECORDED**
-- Phases 9/14/13 (session 6): **UNRECORDED**
+- Phases 9/14/13 (session 6): **UNRECORDED** (the operator separately cited ≈ $8.56 for that session in the session 7 instructions, as an approximate platform figure; it is recorded here as quoted, not derived)
+- Phase 10 (session 7): **UNRECORDED**
 - Operator-reported REMAINING Claude Code credit balance at session 5 start: $66 (reported by the operator in the session 5 instructions). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost; no consumed figure is derived from it.
 - Operator-reported REMAINING Claude Code credit balance: $81 (reported in session 2, 2026-09-24). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost. Consumed usage/cost for Phases 1–6 remains UNRECORDED (no reliable figure available; not to be estimated).
 
 ## Session log
+
+- Session 7 (Phase 10, in the original container): operator approved Phase 10 after seeing the session-6 spend. Start checks passed (branch head `1df7ece`; clone `8958c49` clean, before and after; 127/127 checks before work; the existing venv was reused, no setup attempt consumed). Phase 10 completed (report §11). EXP-05 run (synthetic). CSV: D01 impl_evidence → VERIFIED; `last_phase` → 10 on C05, D01. PF-8 superseded (§11.10); D01 resolved (§11.11). **P1A STOP.**
 
 - Session 1 (2026-09-24): Phases 1–4; commit `bae290c`. The first push was blocked until the Claude GitHub App was installed on the fork, then succeeded.
 - Session 3 (2026-09-24): fresh session. Scratch clone recreated and pinned (`8958c49` verified before and after). Venv recreated in setup attempt 1 of 2 (recorded command, succeeded; Python 3.11.15, pandas 2.1.3, numpy 1.26.4). Phase 7 completed (report §8). CSV: P07 impl_evidence UNVERIFIED → VERIFIED; `last_phase` → 7 on 26 rows. Report-text corrections to §7.3 and Card 4 (backfill documented). `check_consistency.py` expectations updated for Phase 7. No experiments were run; one pandas signature check. Stopped before Phase 8.
