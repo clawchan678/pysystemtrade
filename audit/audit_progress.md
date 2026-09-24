@@ -42,11 +42,11 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P0 Phase 3 — System / Stage / Caching | COMPLETE (report §3) |
 | P0 Phase 4 — Four-layer decomposition + Signal Contract + Case A/B | COMPLETE — **APPROVED by operator** (session 2), incl. the three classification decisions (see U3) |
 | P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE (report §6; 16 cards / 26 IDs + SC + 13 Tier 2 = 40; evidence-change log §6.5) |
-| P0 Phase 6 — pysystemtrade-specific framework concepts | COMPLETE (report §7; 10 concepts; E06 added; DV10) |
+| P0 Phase 6 — pysystemtrade-specific framework concepts | COMPLETE — **APPROVED by operator** (session 2) (report §7; 10 concepts; E06 added; DV10) |
 | P0 Phases 7–8 | NOT STARTED |
 | P1A, P1B, P2 | NOT STARTED |
 
-**Current phase:** P0 — Phase 6 complete (Phase 5 gate approved by the operator, session 2); Phase 7 next.
+**Current phase:** P0 — Phase 6 complete and approved; Phase 7 next, to run in a **fresh Claude Code session** (operator instruction).
 
 **Exact next task:** Begin **Phase 7 — State and estimation** (spec §37), writing report §8. Build the table `Quantity | Source | Window | Update Frequency | Method | Available When | Rolling/Expanding/Fixed | OOS Behavior | Missing Data | Evidence` for these quantities:
 - volatility (R02); forecast correlations (R03); instrument correlations for the IDM and for risk (R07);
@@ -67,6 +67,7 @@ For each quantity inspect: availability timing, future information, full-sample 
 - U4: `systems/provided/dynamic_small_system_optimise` (an alternative portfolio construction path) has been classified only. It is PARTIALLY AUDITED.
 
 - U5: **RESOLVED** (operator ruling, session 2). §12 is applied literally: direct source inspection does not justify an INFERRED → VERIFIED upgrade. R04 and R07 `impl_evidence` were reverted to **INFERRED** in the CSV, report cards 8 and 11, the §6.5 log, and the Executive Summary. The underlying observations and their provenance are kept. P04/E02 (UNVERIFIED → VERIFIED) are unaffected.
+- U7: RESOLVED (operator decision, session 2). The E06_PROD_OVERRIDES_LIMITS row stays in the inventory as Tier 2 / VERIFIED (41 rows). It changes only if the audit itself establishes a reason.
 - U6: RESOLVED (session 2 check). The Tier 1 ID count was misstated as 27 in the report and progress file; the correct count is 26 (26 + SC + 13 Tier 2 = 40). Card 6 stated A06 `swap_evidence` as INFERRED while the CSV holds TESTED (Phase 4, approved); the card text was aligned to the CSV, and no evidence value was changed.
 
 ## Evidence gaps
@@ -113,7 +114,7 @@ Phase 10: not started. Phase 15: not started (EXP-01/02 are Signal-Contract/Stag
 ## Session log
 
 - Session 1 (2026-09-24): Phases 1–4; commit `bae290c`. The first push was blocked until the Claude GitHub App was installed on the fork, then succeeded.
-- Session 2: Phase 4 approved; spec files added; Phase 5 completed; persistence check (26-ID count, Card 6); U5 revert; Phase 5 approved; Phase 6 completed. SHA re-verified `8958c49`.
+- Session 2: Phase 4 approved; spec files added; Phase 5 completed; persistence check (26-ID count, Card 6); U5 revert; Phase 5 approved; Phase 6 completed and approved (E06 kept). SHA re-verified `8958c49`. Phase 7 handed to a fresh session.
 
 ## Safety log
 
