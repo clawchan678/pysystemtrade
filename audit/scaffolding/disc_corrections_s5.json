@@ -1,0 +1,8 @@
+{
+ "B1": "There is no separate event loop; the only per-period loop is the buffer application (`account_buffering_subsystem.py:106-165`).",
+ "A1": "There is no separate event loop. In the default configuration the only path-dependent per-period loop is the buffered position path P06 (`account_buffering_subsystem.py:106-165`). Other per-period loops exist: the risk-series date loop (`sysquant/portfolio_risk.py:30-58`, used only when the risk overlay is configured; each date is independent), the per-fit-period loops in the optimiser and diversification multipliers (`optimise_over_time.py:54-77`; `diversification_multipliers.py:44-60`, used only when estimation is on), and the sequential `half_compounding` capital loop (`syscore/capital.py:34-46`, path-dependent, off by default). *(Corrected in session 5, DISC-1; see §13.9.)*",
+ "B2": "- **State:** P05 stateless; **P06 stateful**, the only path-dependent loop in the backtest.",
+ "A2": "- **State:** P05 stateless; **P06 stateful**, the only path-dependent loop in the backtest **in the default configuration**. The sequential `half_compounding` capital loop (`syscore/capital.py:34-46`, off by default) and the P09 date loop (`optimised_positions_stage.py:53-78`, alternative system) are also path-dependent. *(Corrected in session 5, DISC-2; see §13.9.)*",
+ "B3": "Path state (the only stateful loop in the backtest)",
+ "A3": "Path state (the only path-dependent loop in the default configuration; `half_compounding`, off by default, is also sequential and path-dependent, see Q18 *(corrected in session 5, DISC-2)*)"
+}

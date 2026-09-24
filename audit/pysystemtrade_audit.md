@@ -4,7 +4,7 @@ Audited commit: `pst-group/pysystemtrade` @ **`8958c49`** (`8958c49c38b1e4a8c07f
 All citations below are `path:lines @ 8958c49` unless stated otherwise.
 Evidence tags: VERIFIED / DOCUMENTED / INFERRED / HYPOTHESIS / UNVERIFIED (spec §12). The counterfactual tag `swap_evidence` is kept separate (spec §13).
 
-Status: **P0 Phases 1–8 complete — P0 STOP** (Phase 4 and Phase 5 gates approved by the operator; Phase 6 approved; Phase 7 awaiting operator review). Next: P1A (Phase 11 first).
+Status: **P0 complete (Phases 1–8, all approved). P1A in progress: Phases 11 and 12 complete** (session 5, intermediate stop chosen by the operator; not the P1A stop). Next: Phase 9, then 14, 13, 10.
 
 ---
 
@@ -24,7 +24,7 @@ Status: **P0 Phases 1–8 complete — P0 STOP** (Phase 4 and Phase 5 gates appr
 12. **Backtest fill timing.** With the default `delayfill=True`, positions are shifted one row, and `calculate_pandl` applies a second `shift(1)` against price differences. A position decided at close t therefore earns returns from close t+1 onward (`pandl_calculation.py:150-158,223-235`). VERIFIED static; the empirical trace is Phase 16.
 13. **Frequency.** Provided rules and all calibration statistics assume business-day data: `resample("1B").last()` (`syscore/pandas/frequency.py:169-170`), weights resampled to 1B, turnover annualised by business days, and vol scaled by √(business days). VERIFIED. The P&L supports business-day or hourly positions; any other frequency hits a warning path (`systems/accounts/account_inputs.py:35-60`).
 14. **Research/live coupling.** Production re-runs the same backtest `System` daily and stores `buffers.iloc[-1]` as the live optimal position band (`sysproduction/strategy_code/run_system_classic.py:146-183`). VERIFIED. Order generation then trades to `round(edge)`, with **trade-to-edge hard-coded** regardless of `buffer_trade_to_edge` (`sysexecution/strategies/classic_buffered_positions.py:141-160`). VERIFIED; the divergence from backtest behaviour applies when the config is False.
-15. **Doc divergences.** The docs say "the project doesn't yet include a live trading system" (`docs/backtesting.md:1643`), but a full `sysproduction`/`sysexecution`/`sysbrokers` stack exists. Minor stale docstrings and doctests: `mixed_vol_calc` vol-floor parameters are not implemented (`vol.py:121-181`), and `ForecastScaleCapFixed` does not exist. VERIFIED. The full register is DV1–DV10. Phase 8 added DV11 (the docs' stage-wiring diagram names `rawdata.get_daily_returns_volatility`, which does not exist) and DV12 (doc examples reference `systems.futures.rules` and `rawdata.daily_prices`, which do not exist).
+15. **Doc divergences.** The docs say "the project doesn't yet include a live trading system" (`docs/backtesting.md:1643`), but a full `sysproduction`/`sysexecution`/`sysbrokers` stack exists. Minor stale docstrings and doctests: `mixed_vol_calc` vol-floor parameters are not implemented (`vol.py:121-181`), and `ForecastScaleCapFixed` does not exist. VERIFIED. The full register is DV1–DV10. Phase 8 added DV11 (the docs' stage-wiring diagram names `rawdata.get_daily_returns_volatility`, which does not exist) and DV12 (doc examples reference `systems.futures.rules` and `rawdata.daily_prices`, which do not exist). Phases 11–12 added DV13 (the docs place a `Slippage` column in `instrument_config.csv`; the shipped file has none and spread comes from `spreadcosts.csv`), UD3 (`minimum_position_limit` returns `False`, reaching only the dynamic-optimised live strategy) and UD4 (commission = max of the three types, which is undocumented).
 16. **State and estimation (Phase 7, §8).** The 20-quantity table shows:
     - most estimates are causal at the date level: exponential estimators take rows strictly before `period_start`, and weights and correlations apply from `period_start`;
     - end-of-sample or full-sample quantities are the cost vol deflator (active by default), the SR cost per trade, and turnover;
@@ -35,16 +35,24 @@ Status: **P0 Phases 1–8 complete — P0 STOP** (Phase 4 and Phase 5 gates appr
     - positions use the unshifted capital multiplier while account capital is `shift(1)`;
     - production re-estimates the whole history every run and uses only the last row.
     Twelve pre-flags (PF-1…PF-12) are left unclassified for Phase 14.
-17. **Testing status.** Only two targeted controlled experiments (EXP-01, EXP-02) and one coercion check (EXP-03) have run. Phases 7 and 8 were static (Phase 7 added one pandas signature check). The Phase 8 flow trace was NOT TESTED: static reading was sufficient (§9.8). The repo test suite has not been run yet (Phase 18).
-18. **Evidence gaps (after Phase 8).** Phase 8 closed no gaps. The flow edges that touch E05 (stacks, algos, IB), D01 (roll/contract data), P09 (dynamic optimisation) and G8 (production scheduling) are marked, not filled. Earlier status: Closed in Phase 7: the risk-series internals (G2), `pandl_SR_cost.py` (G3), compounding capital (P07 → VERIFIED) and the correlation cleaning path (read; R03/R07 stay INFERRED per U5). Still open: data/roll construction (D01), dynamic optimisation (P09, PARTIALLY AUDITED), per-method optimiser numerics, the `minimum_position_limit` call-site effect, and production scheduling and staleness checks (G8).
-19. **Phases 5–6.** All 41 rows are tiered (Tier 1: 16 cards covering 26 IDs). Findings:
-    - the risk overlay is OFF by default and not documented in `docs/`;
-    - costs are anchored to the end of the sample, and the speed limit uses a full-sample turnover (both pre-flags for Phase 14);
-    - the default handcrafted optimiser uses fixed binary clustering with a Sharpe-ratio tilt;
-    - pooled estimators stack instruments with microsecond offsets (the code itself warns this is unsuitable for high-frequency data);
-    - production overrides, position limits and trade limits exist only downstream of the System and have no backtest equivalent.
-    - Divergences DV7–DV10 are in the register.
-20. **Evidence discipline.** Phase 8 changed only `last_phase` (→ 8 on the rows traced in §9) and raised two discrepancies about earlier sections for the operator (DISC-1/DISC-2, not edited), all logged in §9.9. Phase 7 changed one CSV evidence value (P07 UNVERIFIED → VERIFIED on code read) and set `last_phase` to 7 for the rows it covered, all logged in §8.6. Phase 5 changed `impl_evidence` only for P04 and E02 (UNVERIFIED → VERIFIED, after reading their code) and corrected one Phase 4 doc_status label (P04). Phase 5 had also moved R04 and R07 from INFERRED to VERIFIED; both were **reverted to INFERRED** per the operator's literal reading of spec §12 (session 2, U5), because §12 forbids that upgrade. This is logged in §6.5. No counterfactual was relabelled.
+17. **Testing status.** Only two targeted controlled experiments (EXP-01, EXP-02) and one coercion check (EXP-03) have run. Phases 7, 8, 11 and 12 were static (Phase 7 added one pandas signature check); their flow and cost questions were NOT TESTED because static reading was sufficient. Two INFERRED effects are left for Phase 15 (O-P11-1 tilt strength; how a `False` maximum is handled). The repo test suite has not been run yet (Phase 18).
+18. **Evidence gaps (after Phase 12).**
+    - **Closed:** G1 (optimiser numerics, cleaning, pooled correlation, all read; R03/R05/R06 stay INFERRED per U5) and G7 (the call-site effect of `minimum_position_limit`, UD3).
+    - **Partly closed:** P09 core read (PARTIALLY AUDITED — RESOURCE PRIORITY: constraints set-up, data preparation, accounts and live strategy internals not read).
+    - **Still open:** E05 (stacks, algos, IB), D01 (roll/contract data), G8 (production scheduling), live commission feedback (limited search).
+    - Absence claims for market impact and cost curves rest on name-based searches, so they are UNVERIFIED beyond the searched terms.
+19. **Methodology (Phases 5–6, 11–12).**
+    - All 41 rows are tiered (Tier 1: 16 cards covering 26 IDs).
+    - Weights: the default handcraft optimiser = binary clustering (0.5/0.5 × sub-portfolio DM) with a *top-level-only* parametric Sharpe-ratio tilt that uses hard-coded avg SR 0.5 and std 0.15. Its `years_of_data` counts stacked pooled rows (O-P11-1). Markowitz methods are max-SR SLSQP, long-only, weights sum to 1.
+    - Pooled estimators stack instruments with microsecond offsets (the code warns this is unsuitable for high-frequency data).
+    - Costs: linear spread plus the max of the three commission types; roll pseudo-fills × 0.5; a vol deflator anchored to the sample end (PF-2); no market-impact or cost-curve model found.
+    - In the default configuration costs change P&L only; they reach positions only via estimated weights, the speed limit (OFF) or P09.
+    - Buffer width is not cost-dependent.
+    - P09 is a per-date greedy integer optimiser (tracking error + shadow cost, TE buffer) with end-anchored costs (PF-13 candidate).
+    - The risk overlay is OFF by default and not documented in `docs/`.
+    - Overrides and limits exist only in production.
+    - The §13.6 list names daily-bar, cost-linearity and single-fill-price assumptions that may change for intraday trading (identified only).
+20. **Evidence discipline.** Phases 11–12 changed P09 (impl_evidence UNVERIFIED → VERIFIED on direct reading, which is not a U5 case; stateful Y; swap Y/PARTIAL, INFERRED) and `last_phase` (11/12). The operator-approved DISC-1/DISC-2 text corrections are in §2, Card 12 and §8.1 Q17, logged in §13.9. Phase 8 changed only `last_phase` (→ 8 on the rows traced in §9) and raised two discrepancies about earlier sections for the operator (DISC-1/DISC-2, not edited), all logged in §9.9. Phase 7 changed one CSV evidence value (P07 UNVERIFIED → VERIFIED on code read) and set `last_phase` to 7 for the rows it covered, all logged in §8.6. Phase 5 changed `impl_evidence` only for P04 and E02 (UNVERIFIED → VERIFIED, after reading their code) and corrected one Phase 4 doc_status label (P04). Phase 5 had also moved R04 and R07 from INFERRED to VERIFIED; both were **reverted to INFERRED** per the operator's literal reading of spec §12 (session 2, U5), because §12 forbids that upgrade. This is logged in §6.5. No counterfactual was relabelled.
 
 ---
 
@@ -86,7 +94,7 @@ Package sizes (Python files / lines) @ 8958c49: `systems` 106/19.4k · `sysprodu
 | Tests | `tests/`, `*/tests/`, doctests (pyproject `--doctest-modules`, selected `testpaths`) | Phase 18 |
 
 **Entry points.** Backtest: `systems.provided.futures_chapter15.basesystem.futures_system()` (and other `systems/provided/*`). Production: `sysproduction/run_*.py` scripts under `syscontrol` scheduling. VERIFIED (listing and code).
-**Engines.** The simulation engine is the System/Stage tree (vectorised, whole-history). There is no separate event loop; the only per-period loop is the buffer application (`account_buffering_subsystem.py:106-165`). The live engine is a daily re-run of the same System, followed by stack-based execution. INFERRED from the inspected code; Phase 9 will confirm.
+**Engines.** The simulation engine is the System/Stage tree (vectorised, whole-history). There is no separate event loop. In the default configuration the only path-dependent per-period loop is the buffered position path P06 (`account_buffering_subsystem.py:106-165`). Other per-period loops exist: the risk-series date loop (`sysquant/portfolio_risk.py:30-58`, used only when the risk overlay is configured; each date is independent), the per-fit-period loops in the optimiser and diversification multipliers (`optimise_over_time.py:54-77`; `diversification_multipliers.py:44-60`, used only when estimation is on), and the sequential `half_compounding` capital loop (`syscore/capital.py:34-46`, path-dependent, off by default). *(Corrected in session 5, DISC-1; see §13.9.)* The live engine is a daily re-run of the same System, followed by stack-based execution. INFERRED from the inspected code; Phase 9 will confirm.
 
 ## 3. System / Stage / Caching Architecture (Tier 1)
 
@@ -505,7 +513,7 @@ Conventions. "Doc" means repository documentation in `docs/`, not docstrings. Ev
   - path: start at the first optimal position (NaN → 0). For each row, if the last position is above the top edge, go to the top edge (trade_to_edge) or to optimal; if below the bottom edge, go to the bottom edge or to optimal; otherwise hold. If any input is NaN, hold. With `roundpositions`, the optimal position and both edges are rounded first.
 - **Configuration:** `buffer_method` forecast, `buffer_size` 0.10, `buffer_trade_to_edge` True (`defaults.yaml:296-298`).
 - **Update frequency:** per row of the notional position index (business-daily).
-- **State:** P05 stateless; **P06 stateful**, the only path-dependent loop in the backtest.
+- **State:** P05 stateless; **P06 stateful**, the only path-dependent loop in the backtest **in the default configuration**. The sequential `half_compounding` capital loop (`syscore/capital.py:34-46`, off by default) and the P09 date loop (`optimised_positions_stage.py:53-78`, alternative system) are also path-dependent. *(Corrected in session 5, DISC-2; see §13.9.)*
 - **Data dependencies:** P01/P02/P03 outputs.
 - **Assumptions:** a symmetric static width; trading to the edge reduces costs; integer contracts via rounding.
 - **Alpha-specific:** N.
@@ -841,7 +849,7 @@ Column abbreviations: **R/E/F** = Rolling / Expanding / Fixed. **OOS** = how a v
 | Q14 | Turnover | `strategy_functions.py:11-33`; `account_costs.py:211-293` | **Full sample** | One number per (instrument, rule) or per instrument | `256 × mean(abs(Δ(x_1B / y)))`. *y* = average-position series smoothed by `ewm(250)`, positional → **com** = 250 (O6); for forecasts *y* = 10. Pooled turnover is a length-weighted average across instruments | Needs the whole sample | Fixed (full-sample) | Used by the speed limit (R11), SR costs and net returns for optimisation (PF-4) | `diff().abs().mean()` skips NaN | VERIFIED (R09) |
 | Q15 | Carry estimates | `rawdata.py:456-689`; `sysobjects/carry_data.py:8-60`; `rules/carry.py:21` | `raw_carry`: none. `smoothed_carry` / asset-class median: `ewm(90)`, **com** = 90 (≈ span 181) | Business-daily | `annualised roll = (PRICE − CARRY) / contract-date differential`, computed on the raw (intraday-timestamped) multiple prices, then `resample("1B").mean()`, then divided by annualised vol (Q1). The asset-class median is the cross-sectional median of smoothed carry across the asset class ∩ the system universe; not ffilled before the median, ffilled after reindexing | Close *t* (day-*t* mean of the raw roll; vol at *t*) | Rolling (exponential) | ≤ *t* at the level of this code. Which contract is PRICE/CARRY historically comes from roll data built outside the System (D01, UNVERIFIED) (PF-8) | `PRICE − CARRY == 0` → NaN (`carry_data.py:37`), the same zero-as-missing semantics as SC9. The differential is floored at 1 day | VERIFIED (code); D01 inputs UNVERIFIED |
 | Q16 | Vol scalar / subsystem position | `positionsizing.py:86-326,480-485` | Inherits Q1/Q2 | Business-daily | `capital × 16% / √256 / (block × %vol × fx) × forecast / 10` | Close *t* | n/a (derived) | ≤ *t* | ffill reindex of the vol scalar onto the forecast index | VERIFIED (P01) |
-| Q17 | Buffer edges and buffered position | P05 `buffering.py:35-173`; P06 `account_buffering_subsystem.py:106-208` | Width = 0.1 × \|average position at forecast 10\| | Per row | Edges = ffilled position ± width. P06 is a sequential loop: start at the first optimal (NaN → 0); move to the edge (trade-to-edge) when outside the band; hold on NaN | Close *t*; P06 at *t* depends on the path up to *t* | Path state (the only stateful loop in the backtest) | ≤ *t*. In production only `buffers.iloc[-1]` is used (Q20) | NaN inputs → hold the previous position | VERIFIED (P05/P06) |
+| Q17 | Buffer edges and buffered position | P05 `buffering.py:35-173`; P06 `account_buffering_subsystem.py:106-208` | Width = 0.1 × \|average position at forecast 10\| | Per row | Edges = ffilled position ± width. P06 is a sequential loop: start at the first optimal (NaN → 0); move to the edge (trade-to-edge) when outside the band; hold on NaN | Close *t*; P06 at *t* depends on the path up to *t* | Path state (the only path-dependent loop in the default configuration; `half_compounding`, off by default, is also sequential and path-dependent, see Q18 *(corrected in session 5, DISC-2)*) | ≤ *t*. In production only `buffers.iloc[-1]` is used (Q20) | NaN inputs → hold the previous position | VERIFIED (P05/P06) |
 | Q18 | Capital and account value (backtest) | `syscore/capital.py:19-48`; `account_with_multiplier.py:108-159`; `portfolio.py:76-121,935-945` | Cumulative from the start | Business-daily | `fixed_capital` (**default**, `defaults.yaml:226`): multiplier 1. `full_compounding`: `cumprod(1 + pct_pnl/100)`, where the % P&L is that of the *fixed-capital* portfolio. `half_compounding`: a sequential loop capped at 1.0 | Multiplier at *t* includes P&L at *t* | Expanding (cumulative) | **Positions** use the *unshifted* multiplier (`portfolio.py:93-97`); **account-curve capital** uses `shift(1)` (`account_with_multiplier.py:131`) (O4 / PF-6). Only P&L ≤ *t* is used | ffill of the multiplier | VERIFIED (P07; this phase) |
 | Q19 | Risk estimates (risk overlay) | `portfolio.py:948-1180`; `sysquant/portfolio_risk.py:17-104`; `stdev_estimator.py:55-66` | %vol: Q2 annualised, ffilled. Shocked vol: rolling 10×256 bd 99% quantile, min_periods 3 | Per row of the portfolio-weight index (a daily loop, `portfolio_risk.py:30-58`) | `σ_p = √(wᵀΣw)` with Σ from Q5 and %vol at the date. Sum of absolute risk; leverage = Σ\|w\|. Scalar = min over measures of `L/max(L, m)` | Close *t* | Rolling | Shocked vol uses **`bfill=True`**, which fills only the first `min_periods − 1 = 2` rows (PF-7). `get_stdev_on_date` uses the first row for dates before the index start (`stdev_estimator.py:41-45`) | Correlation lookup failure → offdiag 0.0 matrix | VERIFIED (P04 formula and risk series; the overlay is OFF by default) |
 | Q20 | Execution state (production) | `run_system_classic.py:52-200`; `sysdata/production/capital.py:228-420`; `sysobjects/production/capital.py:102-170`; `classic_buffered_positions.py:36-200`; E06 objects | Persisted (database) | Per production run (daily). Capital is updated per broker-account-value event | (i) Capital: `production_capital_method` `full` by default (`defaults.yaml:74`), updated from broker P&L, with a 10% `check_limit` gate. (ii) Each run builds a **fresh System over the full history** with *current* capital as a constant `notional_trading_capital`, and stores `get_buffers_for_position(...).iloc[-1]` (notional edges) plus reference price, contract and `datetime.now()`. (iii) Order generation reads the stored edges and actual positions and trades to `round(edge)`. (iv) Overrides, position limits and trade limits (rolling `period_days` counters) are applied downstream (§7.10) | Stored at run time; read at order-generation time | Re-estimated from scratch every run (later recalculation of all history; only the last row is used) | Each live decision uses data up to the run. No backtest equivalent for overrides and limits (PF-9, PF-10) | An age check on the stored `ref_date` was **not observed** in `get_optimal_positions` / `trade_given_optimal_and_actual_positions`. "Stale" in `optimal_positions.py` means *config-listed* instruments or strategies (`config.py:52-65`) (absence UNVERIFIED, limited search) | VERIFIED static (E03/E04/E06); no production run (spec §10) |
@@ -1079,6 +1087,8 @@ Feedback structure. There is **no circular dependency**: forecast weights (F1) u
 
 ### 9.7 Discrepancies found in earlier sections (for operator review; NOT edited)
 
+*Session 5 status:* DISC-1 and DISC-2 were accepted by the operator as errors and corrected as text-only fixes in §2, Card 12 and §8.1 Q17. Before/after text is logged in §13.9; no CSV value changed.
+
 | # | Location | Statement | Finding | Evidence |
 |---|---|---|---|---|
 | DISC-1 | §2 "Engines" | "the only per-period loop is the buffer application" (labelled INFERRED) | Other per-period loops exist: `half_compounding` (a sequential capital loop, `syscore/capital.py:34-46`), the risk-series date loop (`portfolio_risk.py:30-58`, §8 O9), and per-fit-period loops in the optimiser and DM (`optimise_over_time.py:54-77`; `diversification_multipliers.py:44-60`) | VERIFIED (code) |
@@ -1104,10 +1114,254 @@ NOT YET AUDITED (P1A Phase 9).
 NOT YET AUDITED (P1A Phase 10).
 
 ## 12. Forecast / Weight / Portfolio Methodology
-NOT YET AUDITED (P1A Phase 11).
+
+**Phase 11 status: COMPLETE** (session 5). Spec §39. All citations are `@ 8958c49`. The work was static source reading only; no experiment was run (§12.6).
+
+**Evidence discipline.**
+- **U5.** New source read is recorded as observation. R03–R07 stay INFERRED.
+- **Pre-flags.** PF-1…PF-12 stay unclassified; new candidates are numbered PF-13+ and are also unclassified.
+- **Rationale.** "Rationale" is taken **only** from repository docs or code comments. Where the repo gives none, it is recorded as UNVERIFIED.
+- **Scope.** This section concentrates on the open gaps (G1, G7, P09). Mechanisms already covered are summarised by reference to Cards §6.4, §7, §8.1 and §9, not re-derived.
+
+### 12.1 Mechanism summary: forecast → risk → position
+
+| Mechanism | Formula (implemented) | Inputs | Estimation / update | Rationale (repo only) | Documented vs implemented | Evidence |
+|---|---|---|---|---|---|---|
+| Forecast generation | `pd.Series(zeros→NaN(f(*data, **kwargs)))` per (instrument, rule) | system-method data (price, vol, carry) | stateless, whole history | "normalise the forecast into something proportional to Sharpe Ratio" (`backtesting.md:1954`) | DV1 (Tx1 DataFrame), UD1 (zeros) | Card 3; §5 SC1–SC16 VERIFIED |
+| Scaling | `raw × scalar`; estimated `10 / expanding mean(median_i\|f\|)` | raw forecasts (pooled) | fixed 1.0, or estimated per row with `backfill` (PF-1) | "Scale forecasts so they have the right average absolute value" (`backtesting.md:2394`) | consistent; the backfill is documented (`:2451`) | Card 4 VERIFIED |
+| Caps | `clip(±20)` per rule and on the combined forecast (or mapping) | scaled or combined forecast | constant | "Cap forecasts at a maximum value" (`:2396`); mapping assumes a Gaussian distribution (`:2581`) | consistent | Card 5; §9 P8-O4 VERIFIED |
+| Combination | `Σ w_r·ffill(f_r)` | capped forecasts, weights | weights fixed, or R05 per 365-day period → 1B → EWM125 | method docstring (`forecast_combine.py:60-63`); docs `:2461-2535` | consistent | Card 6 VERIFIED; R05 INFERRED |
+| FDM | `min(1/√(wᵀCw), 2.5)` → EWM125 | weights, R03 correlations | fixed 1.0 or per fit period | `diversification_multipliers.py` docstring ("1 / [ ( W x H x WT ) 1/2 ]") | consistent | Card 8; A08 VERIFIED, R04 INFERRED |
+| Position sizing / vol targeting | `capital × %target/√256 / (point value × price-unit vol × fx) × f/10` (P8-O3) | combined forecast, R02, FX, point value | business-daily | "scale our positions according to our percentage volatility target" (`:2607-2611`) | consistent | Card 9 VERIFIED |
+| Instrument weights | `renorm(EWM125(1B(fix_weights(w_raw))))` | subsystem positions; R06 | fixed, or per 365-day period | docs `:2626-2663`; handcraft rationale: see §12.2 | consistent | Card 10; R06 INFERRED |
+| IDM | as FDM, on R07 correlations of weekly subsystem P&L | instrument weights, R07 | per fit period | docs `:3421-3467` | the docs note the IDM is not adjusted for zeroed weights (`:2648`) | Card 10–11; R07 INFERRED |
+| Correlations | whole-dataset EWM corr; last matrix strictly `< fit_end`; cleaning; floor at zero | forecast levels (weekly, pooled, stacked) / subsystem returns | per fit period | stacking docstring: unsuitable for high-frequency data (`list_of_df.py:83-87`) | consistent | §7.2; §8 O1/O3/O8; R03/R07 INFERRED |
+| Portfolio construction | `subsystem × w × IDM × (risk scalar)` → buffer edges; P09 as an alternative (§12.4) | as above | as above | docs `:2626-2700` | DV3 (live trade-to-edge) | Cards 10, 12, 15; §9 VERIFIED |
+
+### 12.2 G1: per-method optimiser numerics (read this phase)
+
+- **Shared Markowitz core** (`sysquant/optimisation/shared.py:15-191`):
+  - Estimates are first equalised.
+  - Weights then maximise `SR = w·μ / √(wᵀΣw)` with `scipy.optimize.minimize(method="SLSQP")`, bounds `[0,1]`, the equality constraint `Σw = 1`, a 1/N start and `tol=1e-5`.
+  - Σ = diag(σ)·C·diag(σ).
+  - The helpers `fix_mus`/`fix_sigma`/`un_fix_weights` exist in the module but are **not called** on this path. Assets with missing estimates are removed beforehand (`call_optimiser.py:21-42`, `estimates.py:subset_with_available_data`). VERIFIED (code).
+- **Equalisation** (`sysquant/estimators/estimates.py:118-205`, `vol_equaliser` at `:191`):
+  - `vol_equaliser` sets every σ to the in-sample average and rescales μ to keep each Sharpe ratio (doctest `([1.,2.],[2.,4.]) → ([1.5,1.5],[3.,3.])`).
+  - `SR_equaliser` sets `μ_i = target_SR × σ_i`, so all assets get the same SR (default 0.5).
+  - With both on, the optimiser sees identical μ/σ and only the correlation matters. VERIFIED (code).
+- **Methods:**
+  - **equal_weights:** 1/N over assets with valid estimates.
+  - **one_period:** equalise (per config) → max-SR.
+  - **shrinkage:** correlation shrunk toward its average by `shrinkage_corr`, and means shrunk toward the target SR by `shrinkage_SR`, then `optimise_given_estimates(**weighting_kwargs)`. Because `equalise_SR` is also passed through to `optimise_given_estimates`, a config with `equalise_SR: True` would replace the shrunk means with equal-SR means (VERIFIED code path). The docs note the related case: "if you equalise Sharpe by shrinking with a factor of 1.0, then this will override the effect of any pooling or changes to cost calculation" (`backtesting.md:3379-3392`). The defaults use `equalise_SR: False` for forecast weights.
+  - **handcraft:**
+    - ≤ 2 assets: 1/N.
+    - Otherwise: recursive clustering into **two** groups (`FIXED_CLUSTER_SIZE = 2`), 0.5/0.5 between groups, each group's weights × its own DM.
+    - Sub-portfolios are always solved with `equalise_SR=True` (`handcraft.py:194-210`, the call at `:206`). **The SR tilt is applied once, at the top level only.**
+  - All VERIFIED (code).
+- **SR tilt numerics** (`SR_adjustment.py:77-251`):
+  - For each asset, `relative_SR = SR_i − mean(SR)`.
+  - The multiplier comes from a *parametric* "mini bootstrap": a 2-asset max-SR problem solved at CDF points {0.2, 0.4, 0.6, 0.8} of a normal distribution. The mean is `relative_SR × 0.15` and the s.d. is `ω = √(2 × (0.15/√years)² × (1 − ρ̄))`, with hard-coded `avg_SR = 0.5` and `std = 0.15`. Weights are averaged and the ratio to 1/N taken; if its sign disagrees with `SR_diff` it is set to 1.0.
+  - Weights × multipliers are then renormalised. VERIFIED (code).
+  - The rationale appears in the docstring only ("parametric bootstrap of portfolio weights", `:118`).
+- **Years of data under pooling** (new observation, O-P11-1):
+  - `data_length` is the row count of the **stacked** pooled net returns in `[fit_start:fit_end]` (`portfolio_optimiser.py:127-131`).
+  - `data_length_years = data_length / periods_per_year` (`estimates.py:59-64`).
+  - With *n* instruments pooled, the row count is ≈ *n* × periods, so the SR tilt is computed as if there were ≈ *n* × calendar years of data. VERIFIED (code). The effect on the tilt's strength is INFERRED, not tested.
+  - The estimator lookbacks *are* adjusted for pooling (`length_adjustment = pooled_length`, `:46-48,168-190`); `data_length` is not.
+- **Cleaning** (`cleaning.py:7-139`):
+  - Assets with data in `[fit_start:fit_end]` are "must-haves".
+  - Missing must-have weights get an equal share of `fraction × (#missing / #assets)`, with `fraction = 0.5` by default. Other weights are scaled by `1 − that`, then everything is renormalised.
+  - Non-must-have NaN gets 0. Doctests confirm the arithmetic. VERIFIED (code).
+- **Pooled forecast correlation:** read in Phase 6 (§7.2) and Phase 7 (O8). No new finding; R03 stays INFERRED.
+- **G1 status:** **CLOSED at code level** (optimiser numerics, cleaning and pooled correlation all read). Classification of R03/R05/R06 is unchanged (INFERRED, U5).
+
+### 12.3 G7: call-site effect of `minimum_position_limit`
+
+- **The single call site** is `sysproduction/data/controls.py:578-592`, `dataPositionLimits.get_maximum_position_contracts_for_instrument_strategy`. It carries the source comment `## FIXME: THIS WON'T WORK IF THERE ARE MULTIPLE STRATEGIES TRADING AN INSTRUMENT`.
+- **Its only callers** are in `sysexecution/strategies/dynamic_optimised_positions.py:289-322`, i.e. the **dynamic-optimised live strategy**.
+  - Its wrapper returns 0 for a `Close` override.
+  - It returns `ARBITRARILY_LARGE_CONTRACT_LIMIT` only when `maximum is NO_LIMIT`.
+  - Otherwise it returns the value as-is.
+- **Effect** in the case "instrument has **no** limit, instrument-strategy **has** limit L":
+  - `minimum_position_limit` returns `other_position_limit.no_limit`, i.e. **`False`** (`position_limits.py:21-28,42-44`).
+  - `False is NO_LIMIT` is false, so the strategy passes `False` as that instrument's maximum position to the optimiser, instead of L.
+  - The return value is VERIFIED (code). How the greedy optimiser then treats `False` (numerically 0) is **INFERRED**, not tested.
+- **Classic-strategy path:** not affected. `strategy_order_handling.py` applies limits via `apply_position_limit_to_order` (§7.10), which does not call this function.
+- **Documented behaviour:** "The dynamic optimisation strategy will also use position limits in its optimisation in production (not in backtests …)" (`docs/production.md:2038`).
+- **G7 status: CLOSED** (the call-site effect is established at code level). Recorded as **UD3** (undocumented behaviour).
+
+### 12.4 P09 dynamic optimisation (read this phase; depth limited by budget)
+
+- **Entry:** `optimisedPositions` stage (`systems/provided/dynamic_small_system_optimise/optimised_positions_stage.py:35-399`).
+- **Backtest loop** (`:53-78`): for each date in the common index, it solves an integer problem with `previous_positions` = the previous date's solution (all zeros at the start). This is a **sequential, path-dependent loop**; its state is the previous positions. On an exception it keeps the previous positions (`:91-98`). VERIFIED.
+- **Inputs per date** (`:102-133`):
+  - "optimal" contracts = the classic portfolio stage's notional positions (`portfolio.get_position_contracts_for_relevant_date`);
+  - covariance (instrument-return correlations × stdev, shrunk by `shrink_instrument_returns_correlation` 0.5);
+  - per-contract value;
+  - costs per contract as a proportion of capital;
+  - constraints (reduce-only, long-only, maxima);
+  - speed control (`shadow_cost` 50, `tracking_error_buffer` 0.0125; `defaults.yaml` `small_system`).
+- **Objective** (`optimisation.py:219-283`):
+
+  `TE(w) + shadow_cost × Σ|cost_i × (w_i − w_prev,i)| + constraint penalty`,
+
+  where `TE(w) = √((w − w*)ᵀ Σ (w − w*))` in weight space.
+- **Algorithm:**
+  - Step 1: if the tracking error of the *prior* weights is below the buffer, keep the prior positions (no trade) (`:107-140`).
+  - Step 2: otherwise, a **greedy** search from the start weights (zeros or constraint minima). On each pass it tries one extra contract per instrument in the direction of the optimum and keeps the best improvement. It stops when no single step improves the objective, or at the limits (`greedy_algo.py:6-90`).
+  - Step 3: the trade from prior to greedy is scaled by `adj = (TE_prior − buffer) / TE_prior` (floored at 0) and rounded in contract space (`buffering.py:15-60`).
+  - Weights divided by per-contract value give integer contracts (`optimisation.py:79-84`).
+  - All VERIFIED (code).
+- **Cost inputs (new pre-flag candidate PF-13):**
+  - The cost per contract uses the **final** raw price and **final** FX rate (`optimised_positions_stage.py:244-262`) and the current contract value.
+  - It is multiplied by the vol deflator `calculate_cost_deflator` (the end-anchored denominator, as PF-2). A NaN deflator is set to **10000.0** (`:211-218`), i.e. prohibitive costs during deflator warm-up.
+  - VERIFIED (code). Unclassified (Phase 14).
+- **Rationale (repo):**
+  - the docs describe it as for "systems with sparse positions" (`backtesting.md:3034,3056`) and as producing "A simple optimal position, eg trade until the position is +5 contracts" (`production.md:980`);
+  - the log strings describe the tracking-error buffer ("is the prior portfolio pretty close to optimal already??");
+  - any fuller design rationale is UNVERIFIED (not found in the repo docs searched: `docs/*.md` for `dynamic`).
+- **Not read** (**PARTIALLY AUDITED — RESOURCE PRIORITY**):
+  - `set_up_constraints.py` details (minima/maxima derivation beyond the names);
+  - `data_for_optimisation.py`;
+  - `accounts_stage.py` P&L internals;
+  - covariance shrinkage internals;
+  - the live strategy path beyond the G7 call site (`sysexecution/strategies/dynamic_optimised_positions.py`).
+
+### 12.5 New observations and pre-flag candidates (Phase 11)
+
+| ID | Observation | Evidence |
+|---|---|---|
+| O-P11-1 | The SR tilt's `years_of_data` counts stacked pooled rows (≈ *n*× calendar years) | `portfolio_optimiser.py:127-131`; `estimates.py:59-64` VERIFIED; effect INFERRED |
+| O-P11-2 | Handcraft applies the SR tilt only at the top level; sub-portfolios are equal-SR | `handcraft.py:98-112,194-210` VERIFIED |
+| O-P11-3 | With `equalise_SR: True` (the instrument-weight default) the SR tilt is skipped and only correlations drive the weights; the forecast-weight default (`equalise_SR: False`) applies the tilt | `handcraft.py:98-112`; `defaults.yaml:196,271` VERIFIED |
+| O-P11-4 | P09's backtest is a sequential, path-dependent loop over dates (in addition to P06), but it is not part of the default System | `optimised_positions_stage.py:53-78` VERIFIED |
+| PF-13 (candidate, unclassified) | P09 costs use the final price, final FX and the end-anchored deflator; the warm-up deflator is set to 10000 | `optimised_positions_stage.py:188-262` VERIFIED |
+
+### 12.6 Experiments
+
+NOT TESTED — REASON: every Phase 11 question (optimiser numerics, the G7 return value, P09 control flow) was settled by static reading (spec §22). The two *effects* recorded as INFERRED — how strongly O-P11-1 changes the SR tilt, and how the greedy optimiser handles a `False` maximum — would need controlled runs. They are left for Phase 15, subject to operator approval.
 
 ## 13. Cost / Turnover / Buffering / Speed Limits
-NOT YET AUDITED (P1A Phase 12).
+
+**Phase 12 status: COMPLETE** (session 5). Spec §39. All citations are `@ 8958c49`. The work was static source reading only (§13.7). Builds on Cards 12–14, §8 Q12–Q14/Q17, §9 D8/D14–D18/F1–F5 and P8-O1/O2; those are summarised here, not re-derived. PF-n stay unclassified.
+
+### 13.1 Trace: forecast/rule → desired position → turnover → transaction cost → portfolio decision
+
+```
+rule forecast ──(A04–A08)──► combined forecast ──(P01–P04)──► desired (notional) position
+      │                                                               │
+      │ forecast turnover R09 = 256·mean|Δ(f_1B/10)| (full sample)    │ buffer edges P05 (width 0.1 × |avg pos|; NOT cost-dependent)
+      ▼                                                               ▼
+ SR cost = turnover × SR_cost_per_trade(E02, last-year) + holding     buffered path P06 (backtest) │ round(edge) E04 (live)
+      │                                                               │
+      ├─► speed limit R11: drop rule if SR cost > ceiling (999/9999 = OFF)   ├─► fills (Δ buffered, rounded position) at t+1 price (E01)
+      ├─► net returns for R05 forecast weights (SR costs × cost_multiplier 2.0)│
+      │                                                               ▼
+      │                                               cash cost per fill (E02) + roll pseudo-fills × 0.5, × vol deflator (PF-2)
+      │                                                               │
+      └──────────── subsystem P&L (cash costs, subsystem buffers) ────┴─► R06 instrument weights, R07 IDM correlations (F2/F3)
+P09 (not default): trade-off TE vs shadow_cost × Σ|cost × trade| per date, integer greedy, TE buffer (§12.4)
+```
+
+In the default configuration (all estimation OFF, R11 OFF, `use_SR_costs: False`), costs change **P&L only**. They reach positions only when estimated weights, the speed limit or P09 are switched on. VERIFIED (§9.2 COSTS row; defaults).
+
+### 13.2 Cost components
+
+| Component | Implemented | Instrument-specific? | Documented | Evidence |
+|---|---|---|---|---|
+| Spread / slippage | `|qty| × price_slippage × point value`, where `price_slippage` = `SpreadCost` from `spreadcosts.csv` (sim) or the Mongo spread-cost store (production) | Yes (per instrument) | "Slippage, in price points. Half the bid-ask spread, unless trading in large size …" (`backtesting.md:3042`) | `instruments.py:344-392`; `futures_sim_data.py:132-215`; `data/futures/csvconfig/spreadcosts.csv` VERIFIED |
+| Commissions | `max(per_block × |qty|, per_trade, percentage × |qty| × price × point value)`; a source comment says "YOU WILL NEED TO CHANGE THIS IF YOUR BROKER HAS A MORE COMPLEX STRUCTURE" | Yes (`instrumentconfig.csv`: PerBlock, Percentage, PerTrade) | The three types are listed (`:3043-3045`). **The combination rule (the maximum) is not documented** (UD4) | `instruments.py:365-373` VERIFIED |
+| Market impact / size-dependent cost | **Not implemented in the cost formula.** The per-fill cost is linear in \|qty\| (slippage and per-block) plus a fixed or percentage term; there is no term that grows faster than quantity | — | The docs caveat "unless trading in large size" (`:3042`) but give no impact model | Formula VERIFIED (`instruments.py:344-392`). Absence of any separate impact module: repo-wide search of `*.py`, `*.yaml`, `*.md` for `market.?impact`, `price.?impact`, `impact_cost`, `square.?root` found no model (the one hit, `production.md:2026`, concerns trade-limit sizing). Search is name-based, so absence beyond these terms is **UNVERIFIED** |
+| Cost curves (non-linear cost vs size) | **None found** | — | — | Search for `cost.?curve`, `nonlinear cost`, `non-linear cost`, `cost_function`: the only hit is `sysquant/returns.py:322` (a variable name for the cost return series). Absence beyond the terms is UNVERIFIED |
+| Roll (holding) costs | Cash method: pseudo-fills at `rolls_per_year` equal dates, qty = average \|position\| over the period × `multiply_roll_costs_by` (0.5), open and close. SR method: `2 × rolls_per_year × SR_cost_per_trade` | `rolls_per_year` per instrument (roll config) | "Both cost methods now account for holding - rollover costs" (`:3036`) | `pandl_cash_costs.py` (`_pseudo_fills_for_year`); `account_costs.py:183-188` VERIFIED |
+| Vol normalisation of costs | `cost × vol_180(t) / vol_180(last)` (PF-2), default ON | — | "normally standardised for historic volatility" (`:3038`) | `strategy_functions.py:164-172` VERIFIED |
+| SR cost per trade | cost of 1 block at the last-year average price / (last-year average annual vol × point value) (PF-3) | Yes | docs `:3058-3066` (usage) | `account_costs.py:295-345` VERIFIED |
+
+### 13.3 Turnover and its control
+
+- **Measured turnover:**
+  - forecast turnover `256 × mean|Δ(f_1B/10)|` (full sample, PF-4);
+  - subsystem and instrument turnover normalised by an average-position series smoothed with `ewm(250)` (com, O6).
+  - VERIFIED (Card 14, §8 Q14).
+- **Turnover controls present:**
+  - (i) **buffering**: a no-trade band, fixed width 0.1 × average position, trade-to-edge; the width does **not** depend on costs (`buffering.py:90-173`; `buffer_size` constant in config);
+  - (ii) the **speed limit** (R11): rule exclusion by SR cost, OFF by default;
+  - (iii) **EWM-125 smoothing** of forecast weights, instrument weights, FDM and IDM (dampens changes that come from weight re-estimation);
+  - (iv) **P09**: shadow cost on trades and a tracking-error buffer (not default);
+  - (v) **live trade limits** (E06, rolling per-period contract counters) and **position limits**.
+  - All VERIFIED (code, cited in §7/§9).
+- **Not a turnover control:** forecast smoothing. The framework does not smooth rule outputs; any smoothing is inside the rule itself (e.g. EWMAC spans). VERIFIED (§5 SC4).
+
+### 13.4 Cost influence on decisions
+
+| Decision | Cost input | Active by default? | Evidence |
+|---|---|---|---|
+| Positions (classic) | none directly | — | §9.2 |
+| Rule inclusion (R11) | full-sample turnover × end-anchored SR cost | No (999/9999) | Card 14 |
+| Forecast weights (R05) | constant SR cost × `cost_multiplier` 2.0 subtracted from returns; optional `apply_cost_weight` post-adjustment | No (estimation OFF) | §7.1; F1 |
+| Instrument weights / IDM (R06/R07) | cash-cost subsystem P&L (deflated) | No (estimation OFF) | F2/F3; P8-O2 |
+| P09 positions | shadow_cost × Σ\|cost × trade\| with final-price costs (PF-13) | No (alternative system) | §12.4 |
+| Live trades | none (costs are not in E04's trade rule); trade limits cap size | — | `classic_buffered_positions.py:141-200` |
+
+### 13.5 Research / live consistency
+
+| Item | Backtest | Live | Status | Evidence |
+|---|---|---|---|---|
+| Buffer exit rule | `buffer_trade_to_edge` config (default True) | hard-coded trade-to-edge `round(edge)` | **DV3** (diverges when the config is False) | Card 12/16 |
+| Rounding | `.round()` of optimal and edges (P06) | `round(edge)` | consistent (round-half-even semantics in both, INFERRED) | §7.9 |
+| Fill price | next-row (t+1) daily price, `delayfill` | execution algos on live prices (E05 UNVERIFIED) | not comparable statically | SC11; G4 |
+| Spread cost | one configured constant per instrument, applied to all history × vol deflator | live: spread sampled from bid/ask plus realised slippage, reported; configured value updatable via interactive control (`auto_update_spread_costs`) | research uses the *current* configured value for the whole history (INFERRED consequence of a single constant) | `sysproduction/reporting/data/costs.py:140-250`; `interactive_controls.py:959,1098` VERIFIED |
+| Commission | configured `instrumentconfig.csv` / DB | broker commissions compared with configured values in a report | reporting only; no automatic feedback observed (limited search) | `sysproduction/reporting/data/commissions.py:18-210` VERIFIED (existence); feedback absence UNVERIFIED |
+| Roll costs | pseudo-fills × 0.5 at equal dates | actual roll trades (roll orders in the stack handler, E05) | modelling vs actual; not compared statically | `pandl_cash_costs.py`; `sysexecution/stack_handler/roll_orders.py` (listing only) |
+| Capital scaling | P07 multiplier (fixed default) | current capital as the notional constant | O5/P8-O5 | §8, §9 |
+| Overrides / limits | none | E06 | no backtest equivalent (F16) | §7.10 |
+
+### 13.6 Assumptions that may change materially for intraday trading (identified only; no replacement designed)
+
+1. **Daily bar granularity:** 1B resampling of prices, turnover and weights; `delayfill` = one daily bar (SC11/SC12). VERIFIED.
+2. **Cost linearity:** no market impact and no cost curve (§13.2). Cost per contract is independent of trade size, time of day and liquidity. VERIFIED formula; absence UNVERIFIED beyond the search.
+3. **Constant spread per instrument** over the whole history (× a 180-day vol deflator). No intraday spread variation is modelled. VERIFIED.
+4. **Fills at a single price per bar** (next daily price). No partial fills, queue position, intrabar sequencing or latency in the backtest. VERIFIED (`pandl_calculation.py:223-235`; `fills.py:63-90`).
+5. **Turnover annualisation** by 256 business days, and SR costs derived from daily vol (√256). VERIFIED.
+6. **Buffer width tied to the average position at forecast 10** (a vol-scaled daily quantity), not to costs or intraday volatility. VERIFIED.
+7. **Roll costs** modelled as a fixed number of evenly spaced events per year. VERIFIED.
+8. **Live execution** via algos on a daily decision (E05 UNVERIFIED): stored edges are stamped `now()` with no age check observed (PF-10).
+
+### 13.7 Experiments
+
+NOT TESTED — REASON: every Phase 12 question was answered by static reading of the cost formulas, call sites and config (spec §22). The quantitative size of cost effects (e.g. how PF-2 changes historical costs) is a Phase 15 question.
+
+### 13.8 Documentation / implementation items raised (see register)
+
+- **DV13:** the docs say `instrument_config.csv` has cost headings including `Slippage` (`backtesting.md:848`). The shipped file `instrumentconfig.csv` has `PerBlock, Percentage, PerTrade` but **no** `Slippage`; slippage comes from `spreadcosts.csv` (`SpreadCost`) via `get_spread_cost` (`futures_sim_data.py:132-215`). VERIFIED.
+- **UD4:** commission = **maximum** of the per-block, per-trade and percentage commissions (`instruments.py:365-373`, `max` at `:373`). The docs list the three types without stating how they combine. Searched `docs/backtesting.md` (costs section `:3025-3077`) and `docs/instruments.md` for `max`/`maximum`/`largest`. VERIFIED (code); undocumented.
+
+### 13.9 Session 5 change log (Phases 11–12; explicit)
+
+**Report-text corrections (operator-approved DISC-1 / DISC-2; text only, no CSV value changed):**
+
+| Location | Before | After |
+|---|---|---|
+| §2 "Engines" (DISC-1) | There is no separate event loop; the only per-period loop is the buffer application (`account_buffering_subsystem.py:106-165`). | There is no separate event loop. In the default configuration the only path-dependent per-period loop is the buffered position path P06 (`account_buffering_subsystem.py:106-165`). Other per-period loops exist: the risk-series date loop (`sysquant/portfolio_risk.py:30-58`, used only when the risk overlay is configured; each date is independent), the per-fit-period loops in the optimiser and diversification multipliers (`optimise_over_time.py:54-77`; `diversification_multipliers.py:44-60`, used only when estimation is on), and the sequential `half_compounding` capital loop (`syscore/capital.py:34-46`, path-dependent, off by default). *(Corrected in session 5, DISC-1; see §13.9.)* |
+| Card 12 "State" (DISC-2) | - **State:** P05 stateless; **P06 stateful**, the only path-dependent loop in the backtest. | - **State:** P05 stateless; **P06 stateful**, the only path-dependent loop in the backtest **in the default configuration**. The sequential `half_compounding` capital loop (`syscore/capital.py:34-46`, off by default) and the P09 date loop (`optimised_positions_stage.py:53-78`, alternative system) are also path-dependent. *(Corrected in session 5, DISC-2; see §13.9.)* |
+| §8.1 Q17 "R/E/F" cell (DISC-2) | Path state (the only stateful loop in the backtest) | Path state (the only path-dependent loop in the default configuration; `half_compounding`, off by default, is also sequential and path-dependent, see Q18 *(corrected in session 5, DISC-2)*) |
+| §9.7 header | (no status line) | a one-line session 5 status note pointing here |
+
+**CSV changes:**
+
+| ID | Field | Change | Basis |
+|---|---|---|---|
+| P09_DYNAMIC_OPTIMISATION | impl_evidence | UNVERIFIED → **VERIFIED** | Core code read this phase (§12.4: stage loop, objective, greedy, TE buffer, cost inputs). This is an UNVERIFIED → VERIFIED change on direct reading (same basis as P04/E02/P07), not INFERRED → VERIFIED, so U5 does not apply. Remaining files are PARTIALLY AUDITED — RESOURCE PRIORITY (§12.4) |
+| P09 | stateful | UNKNOWN → Y | Sequential date loop with previous positions (`optimised_positions_stage.py:53-78`) |
+| P09 | survives_if_contract_met / _violated | UNKNOWN / UNKNOWN → Y / PARTIAL | Counterfactual: P09 consumes the classic notional positions (A: unchanged); under B it inherits the upstream forecast semantics (SC9/SC10) while its TE buffer handles sparse positions |
+| P09 | swap_evidence | UNVERIFIED → INFERRED | The counterfactual reasoning above; not tested |
+| P09 | contract_dependency | text updated | §12.4 summary |
+| A01, A02, A04–A08, R01–R08, P01–P04, P09, E06 | last_phase | → 11 | Covered in §12 |
+| R09, R10, R11, P05, P06, E01–E04 | last_phase | → 12 | Covered in §13 |
+
+Unchanged on purpose: every other field. R03–R07 stay INFERRED (U5). E06 is unchanged (Tier 2 / VERIFIED; UD3 is an *undocumented* behaviour, not a divergence, so `divergence` stays N). D01 and E05 stay UNVERIFIED. `alpha_specific` is unchanged (only A03 = Y). Transfer labels stay `NOT YET ASSESSED`.
+
+**Register additions:** DV13, UD3, UD4 (see the divergence register). **New pre-flag candidate:** PF-13 (§12.5), unclassified.
 
 ## 14. Configuration / Experiment Infrastructure
 NOT YET AUDITED (P1A Phase 13).
@@ -1152,5 +1406,8 @@ Evidence gaps G1–G8 and unresolved issues U1–U7 are listed in `audit_progres
 | DV10 | "There are five methods provided" for optimisation; bootstrapping listed, then described as "no longer implemented" (`backtesting.md:3347-3378`) | Four methods registered: equal_weights, shrinkage, handcraft, one_period (`call_optimiser.py:10-15`); `bootstrap` raises "not recognised" (`:65`) | VERIFIED (minor) |
 | DV11 | Stage-wiring diagram: the rule's inputs are `system.data.get_raw_price` and `system.rawdata.get_daily_returns_volatility` (`docs/backtesting.md:1864-1865`) | `RawData` has `daily_returns_volatility` (`rawdata.py:154`); `get_daily_returns_volatility` exists only on the accounts stage (`account_inputs.py:76`). The default rule config uses `rawdata.get_daily_prices` + `rawdata.daily_returns_volatility` (`futuresconfig.yaml:10-40`) | VERIFIED (minor) |
 | DV12 | Rule examples use `function="systems.futures.rules.ewmac"` and `data=["rawdata.daily_prices", ...]` (`docs/backtesting.md:616-628`; 11 occurrences of `systems.futures.rules`) | There is no `systems/futures` package (the rules are in `systems/provided/rules/`), and `RawData` has `get_daily_prices` (`rawdata.py:57`), not `daily_prices`. Searched: `ls systems/futures`; `grep def daily_prices systems/rawdata.py` | VERIFIED (minor) |
+| DV13 | `instrument_config.csv` headings include cost column `Slippage` (`backtesting.md:848`) | The shipped `data/futures/csvconfig/instrumentconfig.csv` has `PerBlock, Percentage, PerTrade` and **no** `Slippage`; slippage comes from `spreadcosts.csv` (`SpreadCost`) via `get_spread_cost` (`futures_sim_data.py:132-215`) | VERIFIED (minor) |
 | UD1 | (undocumented) | Zeros → NaN → ffill (SC9) | TESTED (EXP-01) |
 | UD2 | (undocumented) | base_system_cache ignores arguments | TESTED (EXP-02) |
+| UD3 | (undocumented) | `positionLimit.minimum_position_limit` returns `other.no_limit` (a bool, `False`) when the instrument has no limit but the instrument-strategy does; reaches only the dynamic-optimised live strategy's maximum-position input (`controls.py:578-592`; `dynamic_optimised_positions.py:289-322`). Downstream numeric treatment INFERRED | VERIFIED (return value) |
+| UD4 | (undocumented) | Commission = **max**(per-block × \|qty\|, per-trade, percentage × value), not a sum (`instruments.py:365-373`); the docs list the three types without the combination rule (searched the `backtesting.md` costs section and `instruments.md` for max/maximum/largest) | VERIFIED |
