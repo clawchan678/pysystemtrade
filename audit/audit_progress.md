@@ -125,6 +125,7 @@ Phase 10: not started. Phase 15: not started (Phase 7 ran no experiments) (EXP-0
 - Phase 5 (session 2): not recorded (operator to supply).
 - Phase 6 (session 2): not recorded (operator to supply).
 - Phase 7 (session 3): **UNRECORDED**. Claude Code cannot see account-level usage and has not estimated it; the operator will supply the figure. Budget plan (spec §18): P0 35%, P1A 40%, P1B 15%, reserve 10%.
+- Operator-reported REMAINING Claude Code credit balance: $81 (reported in session 2, 2026-09-24). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost. Consumed usage/cost for Phases 1–6 remains UNRECORDED (no reliable figure available; not to be estimated).
 
 ## Session log
 
