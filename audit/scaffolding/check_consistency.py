@@ -21,7 +21,7 @@ chk("Tier1(27)+SC+Tier2(%d)=40"%len(set(t2)), len(t1)+1+len(set(t2))==40)
 for k in ["FDM split","buffered position is PORTFOLIO_RISK","Implementation-location caveat","**simulated**"]:
     chk("approved classification text: "+k, k in R)
 byid={r["component_id"].split("_")[0]:r for r in rows}
-exp={"R04":{"impl_evidence":"VERIFIED"},"R07":{"impl_evidence":"VERIFIED"},"P04":{"impl_evidence":"VERIFIED","stateful":"N","doc_status":"NOT_DOCUMENTED"},"E02":{"impl_evidence":"VERIFIED","divergence":"Y"},"R11":{"divergence":"Y"},"R03":{"impl_evidence":"INFERRED"},"R05":{"impl_evidence":"INFERRED"},"R06":{"impl_evidence":"INFERRED"}}
+exp={"R04":{"impl_evidence":"INFERRED"},"R07":{"impl_evidence":"INFERRED"},"P04":{"impl_evidence":"VERIFIED","stateful":"N","doc_status":"NOT_DOCUMENTED"},"E02":{"impl_evidence":"VERIFIED","divergence":"Y"},"R11":{"divergence":"Y"},"R03":{"impl_evidence":"INFERRED"},"R05":{"impl_evidence":"INFERRED"},"R06":{"impl_evidence":"INFERRED"}}
 for i,d in exp.items():
     for k,v in d.items(): chk("CSV %s.%s == %s (is %s)"%(i,k,v,byid[i][k]), byid[i][k]==v)
 chk("all last_phase == 5", all(r["last_phase"]=="5" for r in rows))
@@ -35,3 +35,10 @@ chk("report status line Phase 5", "P0 Phases 1–5 complete" in R)
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)
 
 chk("Card 6 swap_evidence matches CSV TESTED", "**swap_evidence:** **TESTED**" in R[R.index("#### Card 6"):R.index("#### Card 7")])
+import re as _re
+for i,card in (("R04","#### Card 8"),("R07","#### Card 11")):
+    nxt="#### Card 9" if i=="R04" else "#### Card 12"
+    c=R[R.index(card):R.index(nxt)]
+    chk(i+" card says INFERRED, no residual VERIFIED claim for it", ("R04 **INFERRED**" in c if i=="R04" else "**impl_evidence:** **INFERRED**" in c) and "upgraded in Phase 5" not in c)
+chk("no text still claims R04/R07 VERIFIED", not _re.search(r"(R04|R07)[^\n|]{0,40}\*\*VERIFIED\*\*", R) and "correlation sampling are now VERIFIED" not in P)
+chk("U5 RESOLVED in progress", "U5: **RESOLVED**" in P)

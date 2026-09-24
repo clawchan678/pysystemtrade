@@ -56,12 +56,12 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 - U3: RESOLVED (operator decision, session 2). A08 FDM application = ALPHA; R04 FDM estimation = RESEARCH. P06 buffered position = PORTFOLIO_RISK, with the caveat that the code lives in `systems/accounts/*`. E01 backtest P&L = EXECUTION, qualified as *simulated* execution, distinct from live order generation and broker execution (E03–E05). Caveats preserved in report §6.1 and Cards 8/12/16.
 - U4: `systems/provided/dynamic_small_system_optimise` (an alternative portfolio construction path) has been classified only. It is PARTIALLY AUDITED.
 
-- U5: OPEN (operator decision). Spec §12 says "Never upgrade ... INFERRED → VERIFIED". Phase 5 changed `impl_evidence` for R04 and R07 from INFERRED to VERIFIED after reading their source directly (logged in report §6.5, not silent). If §12 is read literally as covering fresh direct inspection, these two should be reverted to INFERRED. P04/E02 moved from UNVERIFIED, which §12 does not prohibit. Left unchanged pending the operator's ruling.
+- U5: **RESOLVED** (operator ruling, session 2). §12 is applied literally: direct source inspection does not justify an INFERRED → VERIFIED upgrade. R04 and R07 `impl_evidence` were reverted to **INFERRED** in the CSV, report cards 8 and 11, the §6.5 log, and the Executive Summary. The underlying observations and their provenance are kept. P04/E02 (UNVERIFIED → VERIFIED) are unaffected.
 - U6: RESOLVED (session 2 check). The Tier 1 ID count was misstated as 27 in the report and progress file; the correct count is 26 (26 + SC + 13 Tier 2 = 40). Card 6 stated A06 `swap_evidence` as INFERRED while the CSV holds TESTED (Phase 4, approved); the card text was aligned to the CSV, and no evidence value was changed.
 
 ## Evidence gaps
 
-- G1: PARTLY CLOSED in Phase 5. The DM formula and correlation sampling are now VERIFIED. Still open: optimiser internals (`sysquant/optimisation/*`), pooled forecast correlation, and the correlation `cleaning` path (Phases 6/11/14).
+- G1: PARTLY ADDRESSED in Phase 5. The DM formula and correlation sampling were read directly (observations in Cards 8/11). Their classification stays INFERRED per §12 (U5). Still open: optimiser internals (`sysquant/optimisation/*`), pooled forecast correlation, and the correlation `cleaning` path (Phases 6/11/14).
 - G2: PARTLY CLOSED. The overlay formula and default-off wiring are VERIFIED. `calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` are not read.
 - G3: PARTLY CLOSED. Cash-cost model and SR cost per trade VERIFIED. `pandl_SR_cost.py` not read (Phase 12).
 - G6 (new): D01 data/roll construction, P07 compounding capital variants and P09 dynamic optimisation remain UNVERIFIED.

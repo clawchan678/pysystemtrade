@@ -29,7 +29,7 @@ Status: **P0 Phases 1–5 complete** (Phase 4 gate approved by the operator). Ne
 17. **Testing status.** Only two targeted controlled experiments (EXP-01, EXP-02) and one coercion check (EXP-03) have run. The repo test suite has not been run yet (Phase 18).
 18. **Evidence gaps (after Phase 5).** Instrument/forecast-weight optimiser internals, pooled forecast correlation, `pandl_SR_cost.py`, risk-series internals (`calc_portfolio_risk_series`), dynamic optimisation, data/roll construction and the production stack are still classified-only (see `audit_progress.md` G1–G5).
 19. **Phase 5 (inventory).** All 40 rows are tiered: 16 Tier 1 cards cover 26 IDs, 13 Tier 2 rows, and no Tier 3 rows. The Phase 5 reads found: the risk overlay is OFF by default and not documented in `docs/`; cost normalisation and SR cost per trade are anchored to the **end of the sample** (pre-flag for Phase 14); the speed limit uses a full-sample turnover and is effectively off by default (999/9999). New divergences: DV7 (default vol function and floor), DV8/DV9 (config-key names). VERIFIED.
-20. **Evidence discipline.** Phase 5 changed `impl_evidence` only where code was newly read (R04, R07, P04, E02) and corrected one Phase 4 doc_status label (P04). This is logged in §6.5. No counterfactual was relabelled.
+20. **Evidence discipline.** Phase 5 changed `impl_evidence` only for P04 and E02 (UNVERIFIED → VERIFIED, after reading their code) and corrected one Phase 4 doc_status label (P04). Phase 5 had also moved R04 and R07 from INFERRED to VERIFIED; both were **reverted to INFERRED** per the operator's literal reading of spec §12 (session 2, U5), because §12 forbids that upgrade. This is logged in §6.5. No counterfactual was relabelled.
 
 ---
 
@@ -398,11 +398,11 @@ Conventions. "Doc" means repository documentation in `docs/`, not docstrings. Ev
 - **Assumptions:** forecasts are comparable continuous series, so their correlation describes the diversification of the combined forecast; the weights are those in force at the period start.
 - **Alpha-specific:** N.
 - **Documented behaviour:** fixed or estimated FDM (`backtesting.md:2468-2535,3421-3467`). DOCUMENTED.
-- **Implemented behaviour:** as above; the DM formula is VERIFIED (`diversification_multipliers.py`). Pooled correlation internals are INFERRED (not read).
+- **Implemented behaviour:** as above. The DM formula was read directly in `diversification_multipliers.py` (observation retained); R04's evidence classification remains **INFERRED** per the operator's literal reading of spec §12 (session 2, U5). Pooled correlation internals are INFERRED (not read).
 - **Doc/impl divergence:** N identified.
 - **Case A:** survives unchanged. The FDM is re-estimated or refixed for the new forecast correlations.
 - **Case B:** survives partially. Correlations of held (ffilled) or sparse series are distorted, so the risk interpretation of the FDM is unclear.
-- **swap_evidence:** INFERRED. **impl_evidence:** A08 VERIFIED; R04 **VERIFIED** (upgraded in Phase 5 after reading `diversification_multipliers.py`, see the §6.5 log); R03 INFERRED (unchanged).
+- **swap_evidence:** INFERRED. **impl_evidence:** A08 VERIFIED; R04 **INFERRED** (a Phase 5 upgrade to VERIFIED was reverted per the operator's literal reading of spec §12 (session 2, U5); see §6.5); R03 INFERRED (unchanged).
 
 #### Card 9 — P01 Position sizing (vol targeting)
 
@@ -469,10 +469,10 @@ Conventions. "Doc" means repository documentation in `docs/`, not docstrings. Ev
 - **Assumptions:** EWM correlation of weekly returns; cleaning replaces missing entries (the cleaning path takes `self.data`, and whether it uses future data is **UNVERIFIED**, deferred to Phase 14).
 - **Alpha-specific:** N.
 - **Documented behaviour:** "Estimating correlations and diversification multipliers" (`backtesting.md:3421-3467`). DOCUMENTED.
-- **Implemented behaviour:** as above. The strict `< fit_end` selection is VERIFIED.
+- **Implemented behaviour:** as above. The strict `< fit_end` selection was read directly in `exponential_correlation.py:180-190` (observation retained); the classification remains **INFERRED** per the operator's literal reading of spec §12 (session 2, U5).
 - **Doc/impl divergence:** N identified.
 - **Case A:** survives unchanged. **Case B:** survives partially, because the IDM variant correlates event-system subsystem P&L (INFERRED). The risk variant uses price returns and survives unchanged.
-- **swap_evidence:** INFERRED. **impl_evidence:** **VERIFIED** (upgraded in Phase 5 after reading the estimator sampling path, see §6.5); the cleaning path is UNVERIFIED.
+- **swap_evidence:** INFERRED. **impl_evidence:** **INFERRED** (a Phase 5 upgrade to VERIFIED was reverted per the operator's literal reading of spec §12 (session 2, U5); see §6.5); the cleaning path is UNVERIFIED.
 
 #### Card 12 — P05 Buffer calculation + P06 buffered-position path
 
@@ -593,12 +593,12 @@ Conventions. "Doc" means repository documentation in `docs/`, not docstrings. Ev
 
 ### 6.5 Phase 5 evidence-change log (explicit; nothing upgraded silently)
 
-Each change below is backed by source read during Phase 5. No HYPOTHESIS or INFERRED *claim* was promoted to VERIFIED. Only the `impl_evidence` of components whose code was newly inspected changed.
+Each change below is backed by source read during Phase 5. No HYPOTHESIS or INFERRED *claim* was promoted to VERIFIED. **Session 2 correction (U5):** the operator ruled that §12 applies literally, so the R04 and R07 upgrades from INFERRED to VERIFIED were reverted. The observations from reading their source are kept; only the classification changed back. Only the `impl_evidence` of components whose code was newly inspected changed.
 
 | ID | Field | Phase 4 → Phase 5 | Basis |
 |---|---|---|---|
-| R04 | impl_evidence | INFERRED → VERIFIED | Read `sysquant/estimators/diversification_multipliers.py` (DM formula, period weights, smoothing) |
-| R07 | impl_evidence | INFERRED → VERIFIED | Read `correlation_over_time.py`, `generic_estimator.py:30-140`, `exponential_correlation.py:124-190` (strict `< fit_end`). Cleaning path remains UNVERIFIED |
+| R04 | impl_evidence | INFERRED → VERIFIED → **INFERRED (reverted)** | Source read: `sysquant/estimators/diversification_multipliers.py` (DM formula, period weights, smoothing). Reverted per the operator's literal reading of spec §12 (session 2, U5): direct inspection is not grounds for an INFERRED → VERIFIED upgrade |
+| R07 | impl_evidence | INFERRED → VERIFIED → **INFERRED (reverted)** | Source read: `correlation_over_time.py`, `generic_estimator.py:30-140`, `exponential_correlation.py:124-190` (strict `< fit_end`); cleaning path UNVERIFIED. Reverted per the operator's literal reading of spec §12 (session 2, U5) |
 | P04 | impl_evidence | UNVERIFIED → VERIFIED | Read `risk_overlay.py` and `portfolio.py:178-229,948-1160`; the default-off mechanism is confirmed via `defaults.yaml:305-309` and `configdata.py:103-108` |
 | P04 | stateful | UNKNOWN → N | Computed from position and risk series; no persisted state in the backtest |
 | P04 | doc_status | DOCUMENTED → NOT_DOCUMENTED | `docs/*.md` searched for `risk overlay\|risk_overlay`: one passing mention only (`backtesting.md:1656`). **Correction of a Phase 4 labelling error** |
