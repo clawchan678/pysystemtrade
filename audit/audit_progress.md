@@ -43,21 +43,25 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P0 Phase 4 — Four-layer decomposition + Signal Contract + Case A/B | COMPLETE — **APPROVED by operator** (session 2), incl. the three classification decisions (see U3) |
 | P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE (report §6; 16 cards / 26 IDs + SC + 13 Tier 2 = 40; evidence-change log §6.5) |
 | P0 Phase 6 — pysystemtrade-specific framework concepts | COMPLETE — **APPROVED by operator** (session 2) (report §7; 10 concepts; E06 added; DV10) |
-| P0 Phases 7–8 | NOT STARTED |
+| P0 Phase 7 — State and estimation | COMPLETE (session 3; report §8: 20-quantity table, per-quantity assessment, O1–O12, PF-1…PF-12, change log §8.6) — awaiting operator review |
+| P0 Phase 8 | NOT STARTED |
 | P1A, P1B, P2 | NOT STARTED |
 
-**Current phase:** P0 — Phase 6 complete and approved; Phase 7 next, to run in a **fresh Claude Code session** (operator instruction).
+**Current phase:** P0 — Phase 7 complete (session 3). Phase 8 next, in a **fresh Claude Code session**.
 
-**Exact next task:** Begin **Phase 7 — State and estimation** (spec §37), writing report §8. Build the table `Quantity | Source | Window | Update Frequency | Method | Available When | Rolling/Expanding/Fixed | OOS Behavior | Missing Data | Evidence` for these quantities:
-- volatility (R02); forecast correlations (R03); instrument correlations for the IDM and for risk (R07);
-- forecast and instrument weights (fixed; estimated R05/R06, weights indexed at `period_start`, EWM-125 smoothing);
-- forecast scalars (R01, with `backfill`); forecast cap (A05); FDM (R04/A08); IDM (P03);
-- costs (E02: vol deflator anchored to the final sample value; SR cost per trade from the last year of data) and turnover (R09, full-sample);
-- rolling vs expanding statistics; carry estimates (`rawdata.py:456-689`, read `smoothed_carry` / `median_carry_for_asset_class`);
-- positions and buffers (P06 path state); account value and capital (P07: read `syscore/capital.py` and `account_with_multiplier.py`);
-- risk estimates (P04: read `calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()`); execution state (E04/E06, persisted production state; static only).
-
-For each quantity inspect: availability timing, future information, full-sample estimation, later recalculation, OOS contamination, warm-up, backfilling, and adaptive degrees of freedom. Record findings as pre-flags; causal classification belongs to Phase 14. Then do Phase 8 (report §9: dependency and information flow, correcting the spec §38 diagram), then the **P0 STOP** (spec §38/§53).
+**Exact next task:** Begin **Phase 8 — Dependency / information flow** (spec §38), writing report **§9** (replace the preliminary flow now in §9).
+- **Trace** the spec §38 chain DATA → DATA PROCESSING → TRADING RULE → RAW FORECAST → FORECAST SCALING → FORECAST CAP → FORECAST COMBINATION → VOLATILITY / RISK → INSTRUMENT WEIGHT → PORTFOLIO CONSTRUCTION → BUFFERING → COSTS → POSITION → EXECUTION, and **correct it** where the implementation differs. Corrections already established:
+  - vol (R02) feeds the rules *and* position sizing *before* combination;
+  - zeros → NaN at the rule output;
+  - FDM, then the combined cap or mapping;
+  - vol scalar → subsystem position → instrument weight × IDM × (optional) risk scalar;
+  - buffer edges in the portfolio stage, but the buffered path in accounts (backtest) or order generation (live);
+  - costs sit in accounts (E02) and feed back into research only through SR costs and turnover (R09/R11, estimated weights);
+  - capital multiplier (P07) → actual position;
+  - production: `iloc[-1]` edges → order generation → overrides and limits (E06) → stacks/broker (E05).
+- **For every major dependency** record: information passed; state passed; estimates passed; timing (use the §8.1 "Available When" column and the SC11 delayfill convention); causal availability (cite §8.4 pre-flags, do not classify); and alpha-specific vs generic infrastructure (use the CSV `alpha_specific` column).
+- **Also show** the research feedback edges: forecast P&L proxy (R10) → forecast weights (R05); subsystem P&L → instrument weights (R06) and IDM correlations (R07); turnover/SR cost → speed limit (R11) and net returns.
+- **Then the P0 STOP** (spec §38/§53): update all three files, validate the CSV, run `scaffolding/check_consistency.py` (update its expectations for Phase 8 / P0 end), verify SHA `8958c49`, give a ≤20-bullet P0 summary, and STOP. Do not start P1A.
 
 ## Unresolved issues
 
@@ -72,11 +76,12 @@ For each quantity inspect: availability timing, future information, full-sample 
 
 ## Evidence gaps
 
-- G1: PARTLY ADDRESSED in Phase 5. The DM formula and correlation sampling were read directly (observations in Cards 8/11). Their classification stays INFERRED per §12 (U5). Still open: optimiser internals (`sysquant/optimisation/*`), pooled forecast correlation, and the correlation `cleaning` path (Phases 6/11/14).
-- G2: PARTLY CLOSED. The overlay formula and default-off wiring are VERIFIED. `calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` are not read.
-- G3: PARTLY CLOSED. Cash-cost model and SR cost per trade VERIFIED. `pandl_SR_cost.py` not read (Phase 12).
-- G6: D01 data/roll construction, P07 compounding capital variants and P09 dynamic optimisation remain UNVERIFIED (P09's greedy integer search and speed control were confirmed to exist in Phase 6; still PARTIALLY AUDITED).
-- G7 (Phase 6): `positionLimit.minimum_position_limit` returns a bool when `self.no_limit` (`position_limits.py:21-28`); call-site effect UNVERIFIED. The correlation `cleaning` path is UNVERIFIED (Phase 14).
+- G1: PARTLY ADDRESSED in Phases 5 and 7 (Phase 7: cleaning path and `< fit_end` selection in the mean/stdev estimators read; remaining: per-method optimiser numerics, Phase 11). The DM formula and correlation sampling were read directly (observations in Cards 8/11). Their classification stays INFERRED per §12 (U5). Still open: optimiser internals (`sysquant/optimisation/*`), pooled forecast correlation, and the correlation `cleaning` path (Phases 6/11/14).
+- G2: **CLOSED in Phase 7** (`calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` read, report §8.3 O7/O9). Previously PARTLY CLOSED: The overlay formula and default-off wiring are VERIFIED. `calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` are not read.
+- G3: **CLOSED in Phase 7** (`pandl_SR_cost.py` read, report §8.3 O10). Previously PARTLY CLOSED: Cash-cost model and SR cost per trade VERIFIED. `pandl_SR_cost.py` not read (Phase 12).
+- G6: **P07 closed in Phase 7** (code read; CSV impl_evidence UNVERIFIED → VERIFIED, logged in report §8.6). D01 data/roll construction and P09 dynamic optimisation remain UNVERIFIED (P09's greedy integer search and speed control were confirmed to exist in Phase 6; still PARTIALLY AUDITED).
+- G7 (Phase 6): `positionLimit.minimum_position_limit` returns a bool when `self.no_limit` (`position_limits.py:21-28`); call-site effect still UNVERIFIED. **Phase 7:** the correlation `cleaning` path was read (report §8.3 O8): it fills from the same matrix's average or 0.99, with must-haves from `[fit_start:fit_end]`. No use of data after `fit_end` was observed; R03/R07 stay INFERRED (U5).
+- G8 (Phase 7): production scheduling (`syscontrol`) of `run_systems` vs `run_strategy_order_generator`, and any age/staleness check on stored optimal positions, is UNVERIFIED. Searched `sysexecution/`, `sysproduction/strategy_code/`, `run_strategy_order_generator.py`, `sysproduction/data/optimal_positions.py` for `stale|too old|max_age|days_old`; "stale" there means config-listed instruments or strategies only.
 - G4: Production and execution (sysexecution, sysbrokers, sysproduction) were mapped only at the entry-point level (Phase 19 optional).
 - G5: The P&L fill-timing reading (`delayfill`) is static only (Phase 16 will trace it empirically).
 
@@ -90,7 +95,7 @@ For each quantity inspect: availability timing, future information, full-sample 
 
 ## Estimation flags (defaults in `sysdata/config/defaults.yaml` @ 8958c49)
 
-use_forecast_scale_estimates: False (l.131) · use_forecast_div_mult_estimates: False (l.150) · use_forecast_weight_estimates: False (l.171) · use_instrument_div_mult_estimates: False (l.236) · use_instrument_weight_estimates: False (l.256) · use_SR_costs: False (l.300) · buffer_method: forecast (l.296). EXP-01/02 ran with all estimation OFF (fixed values).
+use_forecast_scale_estimates: False (l.131) · use_forecast_div_mult_estimates: False (l.150) · use_forecast_weight_estimates: False (l.171) · use_instrument_div_mult_estimates: False (l.236) · use_instrument_weight_estimates: False (l.256) · use_SR_costs: False (l.300) · buffer_method: forecast (l.296) · capital_multiplier func: syscore.capital.fixed_capital (l.226) · production_capital_method: 'full' (l.74) · vol_normalise_currency_costs: True (l.301). EXP-01/02 ran with all estimation OFF (fixed values).
 
 ## Scratch modifications
 
@@ -99,21 +104,32 @@ use_forecast_scale_estimates: False (l.131) · use_forecast_div_mult_estimates: 
 
 ## Important findings (P0 so far)
 
-See report §3–§5 and the Executive Summary. Key items: F1 zero→NaN→ffill (EXP-01); F2 base-cache argument blindness (EXP-02); F3 cache keys exclude config/data (DOCUMENTED + VERIFIED); F4 the forecast scalar backfills its first estimate (`backfill=True` default, comment "SLIGHTLY CHEATING"); F5 production hard-codes trade-to-edge; F6 docs "Tx1 dataframe" vs `pd.Series` coercion (EXP-03). **Phase 5:** F7 cost vol deflator and SR cost per trade are anchored to the end of the sample (pre-flag for Phase 14); F8 risk overlay is OFF by default and not documented in `docs/`; F9 the speed limit uses a full-sample turnover and is effectively OFF by default; F10 DV7 (documented default vol function and floor differ from the configured default), DV8/DV9 (config-key names). **Phase 6:** F11 DV10 (docs "five" optimisation methods vs four registered; bootstrap not implemented); F12 handcrafting = fixed binary clustering with a 0.5/0.5 split × sub-portfolio DM and an SR tilt that depends on years of data; F13 pooled estimators stack instruments with microsecond offsets, and the code warns this is unsuitable for high-frequency data; F14 FDM correlations use weekly forecast *levels*, the IDM uses weekly subsystem *returns*; F15 integer handling uses round (backtest/live buffers) vs floor (overrides); F16 overrides, position limits and trade limits exist only in production, downstream of the System.
+See report §3–§5, §8 and the Executive Summary. Key items: F1 zero→NaN→ffill (EXP-01); F2 base-cache argument blindness (EXP-02); F3 cache keys exclude config/data (DOCUMENTED + VERIFIED); F4 the forecast scalar backfills its first estimate (`backfill=True` default, comment "SLIGHTLY CHEATING"); F5 production hard-codes trade-to-edge; F6 docs "Tx1 dataframe" vs `pd.Series` coercion (EXP-03). **Phase 5:** F7 cost vol deflator and SR cost per trade are anchored to the end of the sample (pre-flag for Phase 14); F8 risk overlay is OFF by default and not documented in `docs/`; F9 the speed limit uses a full-sample turnover and is effectively OFF by default; F10 DV7 (documented default vol function and floor differ from the configured default), DV8/DV9 (config-key names). **Phase 6:** F11 DV10 (docs "five" optimisation methods vs four registered; bootstrap not implemented); F12 handcrafting = fixed binary clustering with a 0.5/0.5 split × sub-portfolio DM and an SR tilt that depends on years of data; F13 pooled estimators stack instruments with microsecond offsets, and the code warns this is unsuitable for high-frequency data; F14 FDM correlations use weekly forecast *levels*, the IDM uses weekly subsystem *returns*; F15 integer handling uses round (backtest/live buffers) vs floor (overrides); F16 overrides, position limits and trade limits exist only in production, downstream of the System. **Phase 7 (report §8):**
+- F17: every default estimator is exponential and ignores `fit_start`, so `rolling`/`rollyears` has no effect there. `rollyears` counts periods (O1).
+- F18: the fit-period grid is anchored to the sample end, so historic periods shift when data is added (O2/PF-11).
+- F19: inclusive `[fit_start:fit_end]` slices (cleaning, non-exponential estimators) vs strict `<` in the exponential path (O3/PF-5).
+- F20: positions use the unshifted capital multiplier while account capital is `shift(1)` (O4/PF-6).
+- F21: the backtest capital default is `fixed` while the production default is `full` (O5).
+- F22: `ewm(n)` in the carry and turnover code means com, not span (O6).
+- F23: the forecast-scalar backfill **is** documented (`backtesting.md:2451`), which corrects §7.3 and Card 4 (O11).
+- F24: production re-estimates all history every run, stores notional edges stamped `now()`, and no age check on them was observed (O12/PF-9/PF-10).
+- The SR-cost P&L is a smooth charge on the average position, built from full-sample turnover × end-anchored SR cost (O10).
 
 ## Optional-phase status
 
-Phase 10: not started. Phase 15: not started (EXP-01/02 are Signal-Contract/Stage checks, not causality tests). Phase 19: not started.
+Phase 10: not started. Phase 15: not started (Phase 7 ran no experiments) (EXP-01/02 are Signal-Contract/Stage checks, not causality tests). Phase 19: not started.
 
 ## Operator-reported usage / cost
 
 - P0 through the Phase 4 gate: **NOT RECORDED.** The operator's message contained the literal placeholder "[INSERT ACTUAL USAGE/COST HERE]"; the operator should supply the actual figure.
 - Phase 5 (session 2): not recorded (operator to supply).
-- Phase 6 (session 2): not recorded (operator to supply). Budget plan (spec §18): P0 35%, P1A 40%, P1B 15%, reserve 10%.
+- Phase 6 (session 2): not recorded (operator to supply).
+- Phase 7 (session 3): **UNRECORDED**. Claude Code cannot see account-level usage and has not estimated it; the operator will supply the figure. Budget plan (spec §18): P0 35%, P1A 40%, P1B 15%, reserve 10%.
 
 ## Session log
 
 - Session 1 (2026-09-24): Phases 1–4; commit `bae290c`. The first push was blocked until the Claude GitHub App was installed on the fork, then succeeded.
+- Session 3 (2026-09-24): fresh session. Scratch clone recreated and pinned (`8958c49` verified before and after). Venv recreated in setup attempt 1 of 2 (recorded command, succeeded; Python 3.11.15, pandas 2.1.3, numpy 1.26.4). Phase 7 completed (report §8). CSV: P07 impl_evidence UNVERIFIED → VERIFIED; `last_phase` → 7 on 26 rows. Report-text corrections to §7.3 and Card 4 (backfill documented). `check_consistency.py` expectations updated for Phase 7. No experiments were run; one pandas signature check. Stopped before Phase 8.
 - Session 2: Phase 4 approved; spec files added; Phase 5 completed; persistence check (26-ID count, Card 6); U5 revert; Phase 5 approved; Phase 6 completed and approved (E06 kept). SHA re-verified `8958c49`. Phase 7 handed to a fresh session.
 
 ## Safety log
