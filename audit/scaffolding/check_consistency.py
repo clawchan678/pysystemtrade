@@ -24,15 +24,15 @@ byid={r["component_id"].split("_")[0]:r for r in rows}
 exp={"R04":{"impl_evidence":"INFERRED"},"R07":{"impl_evidence":"INFERRED"},"P04":{"impl_evidence":"VERIFIED","stateful":"N","doc_status":"NOT_DOCUMENTED"},"E02":{"impl_evidence":"VERIFIED","divergence":"Y"},"R11":{"divergence":"Y"},"R03":{"impl_evidence":"INFERRED"},"R05":{"impl_evidence":"INFERRED"},"R06":{"impl_evidence":"INFERRED"}}
 for i,d in exp.items():
     for k,v in d.items(): chk("CSV %s.%s == %s (is %s)"%(i,k,v,byid[i][k]), byid[i][k]==v)
-chk("last_phase in {5,...,16} (session 8 adds 15, 16)", all(r["last_phase"] in ("5","6","7","8","9","10","11","12","13","14","15","16") for r in rows))
+chk("last_phase in {5,...,16} (session 8 adds 15, 16)", all(r["last_phase"] in ("5","6","7","8","9","10","11","12","13","14","15","16","17") for r in rows))
 chk("swap_evidence as Phase 4 (A06 TESTED, A07 HYPOTHESIS, rest INFERRED/UNVERIFIED)", all(r["swap_evidence"]==({"A06_FORECAST_COMBINATION":"TESTED","A07_FORECAST_MAPPING":"HYPOTHESIS"}.get(r["component_id"], r["swap_evidence"] if r["swap_evidence"] in ("INFERRED","UNVERIFIED") else "X")) for r in rows))
 chk("transfer labels NOT YET ASSESSED", all(r["swing_transfer_label"]==r["intraday_transfer_label"]=="NOT YET ASSESSED" for r in rows))
 for k in ["DV7","DV8","DV9"]: chk(k+" in divergence register", ("| %s |"%k) in R)
 chk("progress: Phase 5 COMPLETE", "P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE" in P)
 NT=P[P.index("**Exact next task:**"):P.index("## Unresolved issues")]
-chk("progress: next task = STOP / await operator authorization after Phase 16 (Phase 17 not started)", "**Exact next task:** **STOP. Await operator authorization** after Phase 16" in P and "Do not start Phase 17" in P)
+chk("progress: next task = STOP / await operator authorization after Phase 17 (Phase 18 not started)", "**Exact next task:** **STOP. Await operator authorization** after Phase 17" in P and "Do not start Phase 18" in P)
 chk("progress: usage NOT RECORDED", "NOT RECORDED" in P)
-chk("report status line: P1A COMPLETE; Phases 15-16 COMPLETE — STOPPED BEFORE PHASE 17", "P1A COMPLETE — P1A STOP" in R[:2000] and "Phase 15 COMPLETE" in R[:2000] and "Phase 16 COMPLETE" in R[:2000] and "STOPPED BEFORE PHASE 17" in R[:2000])
+chk("report status line: P1A COMPLETE; Phases 15-16 COMPLETE — STOPPED BEFORE PHASE 17", "P1A COMPLETE — P1A STOP" in R[:2000] and "Phase 15 COMPLETE" in R[:2000] and "Phase 16 COMPLETE" in R[:2000] and "Phase 17 COMPLETE" in R[:2000] and "STOPPED BEFORE PHASE 18" in R[:2000])
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)
 
 chk("Card 6 swap_evidence matches CSV TESTED", "**swap_evidence:** **TESTED**" in R[R.index("#### Card 6"):R.index("#### Card 7")])
@@ -63,7 +63,7 @@ chk("CSV P07 VERIFIED (Phase 7, logged)", byid["P07"]["impl_evidence"]=="VERIFIE
 chk("CSV: E05 still UNVERIFIED; D01 VERIFIED since session 7 (§11.13); P09 VERIFIED since session 5 (§13.9)", byid["E05"]["impl_evidence"]=="UNVERIFIED" and byid["D01"]["impl_evidence"]=="VERIFIED" and byid["P09"]["impl_evidence"]=="VERIFIED" and "D01_PRICE_ROLL_DATA | impl_evidence | UNVERIFIED → **VERIFIED**" in R)
 chk("E06 unchanged Tier2/VERIFIED", byid["E06"]["impl_evidence"]=="VERIFIED")
 DIST=sorted(__import__("collections").Counter(r["last_phase"] for r in rows).items())
-chk("last_phase distribution matches session 8 (%s)"%DIST, DIST==[("10",1),("11",6),("12",1),("13",1),("14",18),("15",5),("16",4),("5",1),("8",2),("9",2)])
+chk("last_phase distribution matches session 8 (%s)"%DIST, DIST==[("10",1),("11",5),("14",15),("15",5),("16",4),("17",6),("5",1),("8",2),("9",2)])
 es=R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")]
 nb=len(re.findall(r"^\d+\. ",es,re.M)); chk("Executive Summary <=20 bullets (%d)"%nb, nb<=20)
 chk("progress: Phase 7 COMPLETE", "P0 Phase 7 — State and estimation | COMPLETE" in P)
@@ -188,5 +188,17 @@ chk("trace tables A/B/C carry the required fields", all(s17.count(x)>=3 for x in
 chk("documented vs implemented table present", "### 17.4 Documented vs implemented" in s17 and "docs/backtesting.md:2738" in s17)
 chk("EXP-12/12b scripts, outputs and progress rows", all(__import__("os").path.exists("scaffolding/experiments/"+f) for f in ["exp12_timing_trace.py","exp12_output.txt","exp12b_roll_day_source.py","exp12b_output.txt"]) and "| EXP-12 |" in P and "| EXP-12b |" in P)
 chk("CSV: exactly D01,E01,E02,P06 at last_phase 16", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="16")==["D01","E01","E02","P06"])
-chk("progress: Phase 16 COMPLETE, stopped before 17; usage UNRECORDED", "P1B Phase 16 — Position / lag / P&L timing | COMPLETE" in P and "STOPPED BEFORE PHASE 17" in P and "Phase 16 (session 8): **UNRECORDED**" in P)
+chk("progress: Phase 16 COMPLETE, stopped before 17; usage UNRECORDED", "P1B Phase 16 — Position / lag / P&L timing | COMPLETE" in P and "Phase 16 (session 8): **UNRECORDED**" in P)
 chk("Executive Summary <= 20 bullets after Phase 16", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+
+# ---- P1B Phase 17 (session 8) ----
+s18=R[R.index("## 18. Degrees of Freedom / Research Safeguards"):R.index("## 19. Testing / Validation Infrastructure")]
+chk("section 18 complete, placeholder gone", "Phase 17 status: COMPLETE" in s18 and "NOT YET AUDITED (P1B Phase 17)" not in R)
+chk("section 18 has 18.1-18.6", all(("### 18.%d "%k) in s18 for k in range(1,7)))
+chk("parameter inventory covers every requested area", all(("| "+a+" |") in s18 for a in ["Trading-rule parameters","Forecast parameters","Forecast scaling","Forecast caps","Volatility windows","Correlation windows","Instrument weighting","Portfolio parameters","Risk targets","Buffering","Costs","Instrument selection","Rule selection","Adaptive behaviour (other)"]))
+chk("safeguards inventory covers every requested risk", all(("| "+a+" |") in s18 for a in ["Look-ahead","Data snooping","Repeated experimentation","Parameter mining","Strategy selection bias","Instrument selection bias","Date-range selection","Regime selection","Post-hoc methodology changes"]))
+chk("tooling inventory covers sensitivity, bootstrap, Monte Carlo, significance, robustness", all(("| "+a+" |") in s18 for a in ["Sensitivity analysis","Bootstrap","Monte Carlo","Significance testing","Robustness checks"]))
+chk("O-P16-2 status formalised: report-only, not a CSV row, VERIFIED", "**report-only prose; not a CSV row.**" in R and "O-P16-2 status" in P)
+chk("CSV: exactly A04,A05,C04,P01,P05,R02 at last_phase 17; C04 still INFERRED", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="17")==["A04","A05","C04","P01","P05","R02"] and byid["C04"]["impl_evidence"]=="INFERRED")
+chk("progress: Phase 17 COMPLETE, stopped before 18; usage UNRECORDED", "P1B Phase 17 — Degrees of freedom / research safeguards | COMPLETE" in P and "STOPPED BEFORE PHASE 18" in P and "Phase 17 (session 8): **UNRECORDED**" in P)
+chk("Executive Summary <= 20 bullets after Phase 17", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)

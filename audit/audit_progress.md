@@ -56,11 +56,12 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | **P1A (Phases 9–14)** | **COMPLETE — P1A STOP** (Phase 10 awaiting operator review) |
 | P1B Phase 15 — Empirical causality | COMPLETE (session 8, operator-authorised Phase 15 only; report §16: EXP-06…EXP-11 + EXP-08b; PF-2/PF-1/PF-3/PF-4/O-P11-1/O-P9-1/O-P9-2 effects TESTED; PF-11 stays POSSIBLE ISSUE (sample-end → refit-date dependency TESTED as a design property; future market data NO ISSUE IDENTIFIED; interim CONFIRMED relabel reverted by the correction commit, report §16.12); PF-15 → NO ISSUE IDENTIFIED for positions/P&L) — **STOPPED BEFORE PHASE 16** |
 | P1B Phase 16 — Position / lag / P&L timing | COMPLETE (session 8, operator-authorised Phase 16 only; report §17: US10 traced on three rule-selected dates (ordinary 2023-02-28, roll 2023-02-09, boundary 2024-03-28); decision at close t → fill at close t+1 → exposure from t+1; no same-day exposure; consistent with docs; no new divergence; O-P16-1…3) — **STOPPED BEFORE PHASE 17** |
-| P1B Phases 17–19, P2 | NOT STARTED |
+| P1B Phase 17 — Degrees of freedom / research safeguards | COMPLETE (session 8, operator-authorised Phase 17 only; report §18: parameter inventory (fixed / estimated / optimized / heuristic / adaptive), safeguards inventory, tooling inventory; static only, no experiments; O-P17-1…3) — **STOPPED BEFORE PHASE 18** |
+| P1B Phases 18–19, P2 | NOT STARTED |
 
-**Current phase:** P1B Phase 16 COMPLETE — **STOPPED BEFORE PHASE 17** (session 8). Phases 17–19 not started.
+**Current phase:** P1B Phase 17 COMPLETE — **STOPPED BEFORE PHASE 18** (session 8). Phases 18–19 not started.
 
-**Exact next task:** **STOP. Await operator authorization** after Phase 16 (report §17). Do not start Phase 17 (or 18–19) without explicit operator approval.
+**Exact next task:** **STOP. Await operator authorization** after Phase 17 (report §18). Do not start Phase 18 (or 19) without explicit operator approval.
 
 ## Unresolved issues
 
@@ -73,6 +74,7 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 - U7: RESOLVED (operator decision, session 2). The E06_PROD_OVERRIDES_LIMITS row stays in the inventory as Tier 2 / VERIFIED (41 rows). It changes only if the audit itself establishes a reason.
 - U6: RESOLVED (session 2 check). The Tier 1 ID count was misstated as 27 in the report and progress file; the correct count is 26 (26 + SC + 13 Tier 2 = 40). Card 6 stated A06 `swap_evidence` as INFERRED while the CSV holds TESTED (Phase 4, approved); the card text was aligned to the CSV, and no evidence value was changed.
 - L-P15-1 (documented limitation, Phase 15): no rule was stated in advance for choosing a replacement truncation cutoff when a declared one fails. In EXP-06 the declared 2009-12-31 cutoff could not run (EUROSTX has no data before 2014-03-13) and was replaced once, after the failure, by 2016-12-30 (the first year end with all six instruments live). That replacement was chosen after the declaration, not by a pre-stated rule. No other cutoff was tried (report §16.1).
+- O-P16-2 status (roll costs booked on equally spaced pseudo-fill dates, not actual roll dates): **report-only prose, not a CSV row** (decided in Phase 17 at operator request). The CSV is a component inventory held at 41 rows. The behaviour belongs to row E02_COST_MODEL (Card 12, §13). Evidence: VERIFIED (code + EXP-12 trace). The effect size was not measured; no further investigation (report §17.5).
 
 ## Evidence gaps
 
@@ -190,11 +192,13 @@ Phase 10: COMPLETE (session 7; this line said ON HOLD until session 8, and was c
 - Phase 10 (session 7): **UNRECORDED**
 - Phase 15 (session 8): **UNRECORDED** (not estimated)
 - Phase 16 (session 8): **UNRECORDED** (not estimated; the operator asked to set usage aside for this phase)
+- Phase 17 (session 8): **UNRECORDED**. The operator asked for usage against the P1B ceiling before Phase 17; Claude Code has no view of account-level usage and did not estimate it (spec §18). The P1B ceiling (15% share) cannot be converted to dollars from the audit files.
 - Operator-reported REMAINING Claude Code credit balance at session 5 start: $66 (reported by the operator in the session 5 instructions). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost; no consumed figure is derived from it.
 - Operator-reported REMAINING Claude Code credit balance: $81 (reported in session 2, 2026-09-24). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost. Consumed usage/cost for Phases 1–6 remains UNRECORDED (no reliable figure available; not to be estimated).
 
 ## Session log
 
+- Session 8, Phase 17 (operator-authorised; Phase 17 only). The usage request was answered as unavailable (not estimated). The O-P16-2 status was formalised as report-only. Phase 17 was static source inspection, with no experiments. Report §18 written. Executive Summary bullet 19 and the status line updated. CSV: `last_phase` → 17 on C04, A04, A05, R02, P01, P05; nothing else. `audit/repo` stayed at `8958c49`, clean. **STOPPED BEFORE PHASE 18.**
 - Session 8, Phase 16 (operator-authorised; Phase 16 only). Usage was requested first; no account-level figure is visible to Claude Code, and the operator then said to proceed without it. EXP-12/12b were run, scratch-only. Report §17 written. Executive Summary bullet 12 and the status line updated. CSV: `last_phase` → 16 on E01, P06, E02, D01; nothing else. `audit/repo` stayed at `8958c49`, clean. **STOPPED BEFORE PHASE 17.**
 - Session 8, Phase 15 correction (operator-authorised; no new experiments). The PF-11 causality label was reverted to POSSIBLE ISSUE. Its sample-end → refit-date dependency (TESTED, L1–L4, design property) and future market data (NO ISSUE IDENTIFIED, fixed-refit-date control) are now separate lines in report §16.2, §16.5, §16.10, Executive Summary bullet 11 and F45 / the phase table. The interim text is kept verbatim in §16.12 and §15 is unchanged. An O-P9-1 sentence was added (§16.8: the gap is an accounting-valuation effect, not evidence of future information). Limitation L-P15-1 was recorded. No other finding and no CSV value changed. **STOPPED BEFORE PHASE 16.**
 - Session 8 (Phase 15, operator-authorised; Phase 15 only). Start checks passed: branch head `3f65eef`, clean; clone `8958c49` clean; 134/134 checks; the existing venv was reused, with no setup attempt consumed. Ran EXP-06…EXP-11 plus the EXP-08b breakdown in scratch. Truncated CSV copies are under `scaffolding/home/p15data/` (git-ignored). Two variants use in-process patches inside the scripts only (EXP-09, EXP-10); no repository file was modified. Report §16 written; §15 not edited (supersessions in §16.10). Executive Summary bullets 11, 17, 18 and 20 and the status line updated. CSV: `last_phase` → 15 on E02, R01, R05, R08, R09, P09; nothing else. The stale "Phase 10: ON HOLD" optional-phase line was corrected. `check_consistency.py` updated for Phase 15. **STOPPED BEFORE PHASE 16.**
