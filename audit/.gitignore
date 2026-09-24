@@ -1,0 +1,7 @@
+# Scratch-only material: never committed to the audit persistence branch
+repo/
+venv/
+scaffolding/home/
+scaffolding/pipcache/
+__pycache__/
+*.pyc
