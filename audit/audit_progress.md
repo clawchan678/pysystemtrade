@@ -19,7 +19,7 @@
 ### Provenance notes / discrepancies (recorded, not silently reconciled)
 
 1. The session working directory is a clone of the fork `clawchan678/pysystemtrade` at branch `claude/jolly-galileo-jv9j4g`. The fork's HEAD is **identical** to upstream `develop` HEAD (`8958c49`). The audit reads **only** the fresh scratch clone of `pst-group/pysystemtrade` at `audit/repo/` (pinned). The fork checkout serves solely as the **persistence repository** (Mode B) for the three audit files. It is never modified outside `audit/`.
-2. **The operator-supplied `PYSYSTEMTRADE_AUDIT_MASTER.md` and `CLAUDE.md` were NOT present on disk** at session start. The master specification was supplied in the session prompt. Per spec §7, Claude Code did not create the master spec. **Operator action required:** place `PYSYSTEMTRADE_AUDIT_MASTER.md` and `CLAUDE.md` in the workspace (or keep supplying the spec in the prompt) before the next session.
+2. `PYSYSTEMTRADE_AUDIT_MASTER.md` and `CLAUDE.md` were absent at session 1 start. **Resolved in session 2 (Phase 5):** on the operator's explicit instruction, Claude Code wrote both files into `audit/`. `PYSYSTEMTRADE_AUDIT_MASTER.md` is a verbatim copy of the specification text supplied in the session-1 prompt (sections 0–56). `CLAUDE.md` is the §26 text. This overrides the §7 "Claude Code must NOT create the master specification" rule by operator authority. The operator should confirm the file matches their original.
 3. No operator-specified branch conflicts with the reported default branch.
 
 ## Persistence mode
@@ -40,26 +40,28 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P0 Phase 1 — Provenance & environment | COMPLETE |
 | P0 Phase 2 — Repository architecture | COMPLETE (targeted; see report §2) |
 | P0 Phase 3 — System / Stage / Caching | COMPLETE (report §3) |
-| P0 Phase 4 — Four-layer decomposition + Signal Contract + Case A/B | COMPLETE — **AWAITING OPERATOR REVIEW (hard gate, spec §34)** |
-| P0 Phases 5–8 | NOT STARTED (blocked on Phase 4 approval) |
+| P0 Phase 4 — Four-layer decomposition + Signal Contract + Case A/B | COMPLETE — **APPROVED by operator** (session 2), incl. the three classification decisions (see U3) |
+| P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE (report §6; 16 cards / 27 IDs; evidence-change log §6.5) |
+| P0 Phases 6–8 | NOT STARTED |
 | P1A, P1B, P2 | NOT STARTED |
 
-**Current phase:** Phase 4 review gate (STOPPED).
+**Current phase:** P0 — Phase 5 complete; Phase 6 next.
 
-**Exact next task:** After the operator explicitly approves the Phase 4 output: begin **Phase 5 — Master Inventory**. Assign tiers to all 40 CSV rows (Tier 1 candidates are already listed in report §6). Write FULL COMPONENT CARDS (spec §29) for the Tier 1 components into report §6, in this order: C03 cache, C01/C02 System/Stage, A01/A02 rule interface, A04 scaling, A05 cap, A06 combination, R02 vol, A08/R04 FDM, P01 position sizing, P02/P03 instrument weights and IDM, R07 correlations, P05/P06 buffering, E02 costs, R11 speed limit, P04 risk overlay, E04 order generation. Before Phase 5, apply any corrections the operator requests to the §4/§5 classification.
+**Exact next task:** Begin **Phase 6 — pysystemtrade-specific framework concepts** (spec §36), writing report §7. For each concept record existence, location, function, documented vs implemented behaviour, assumptions, evidence and tier: (1) handcrafted vs optimised weights: read `sysquant/optimisation/{generic_optimiser,portfolio_optimiser,full_handcrafting,optimise_over_time}.py` (closes the R05/R06 part of G1); (2) pooling across instruments (forecast scalar, forecast correlations `sysquant/estimators/pooled_correlation.py`, costs/turnover, gross returns); (3) forecast scalar/target/cap (cite Cards 4–5); (4) FDM; (5) IDM (cite Cards 8/10); (6) vol and long-run blending (Card 7, DV7); (7) cost-based speed limits (Card 14); (8) buffering (Card 12); (9) integer/lumpy position handling (rounding in `apply_buffer`, `roundpositions`, production `round()`, `dynamic_small_system_optimise`); (10) production overrides and limits (search `sysproduction/data` and `sysobjects/production` for override and position-limit code). Then Phase 7 (report §8, state/estimation table) and Phase 8 (report §9, dependency flow), then the **P0 STOP** (spec §38/§53).
 
 ## Unresolved issues
 
-- U1: Master spec and CLAUDE.md are absent on disk (see provenance note 2).
-- U2: Operator-reported usage/cost for P0 (Phases 1–4) is not yet recorded. Claude Code cannot see account-level cost.
-- U3: Layer classification uncertainty. FDM is split into application (ALPHA pipeline position) and estimation (RESEARCH). Buffered-position simulation lives in the Accounts stage and is labelled PORTFOLIO_RISK. Backtest P&L/fill simulation is labelled EXECUTION (simulated). Operator to confirm.
+- U1: RESOLVED (session 2). Spec files added to `audit/` on operator instruction (provenance note 2).
+- U2: OPEN. The operator's approval message contained the literal placeholder "[INSERT ACTUAL USAGE/COST HERE]" and no figure. Usage/cost through the Phase 4 gate is therefore still **not recorded**. Claude Code cannot see account-level cost and will not estimate it.
+- U3: RESOLVED (operator decision, session 2). A08 FDM application = ALPHA; R04 FDM estimation = RESEARCH. P06 buffered position = PORTFOLIO_RISK, with the caveat that the code lives in `systems/accounts/*`. E01 backtest P&L = EXECUTION, qualified as *simulated* execution, distinct from live order generation and broker execution (E03–E05). Caveats preserved in report §6.1 and Cards 8/12/16.
 - U4: `systems/provided/dynamic_small_system_optimise` (an alternative portfolio construction path) has been classified only. It is PARTIALLY AUDITED.
 
 ## Evidence gaps
 
-- G1: Instrument-weight and IDM estimation internals (`sysquant/optimisation/*`, `sysquant/estimators/diversification_multipliers.py`, `correlation_over_time.py`) were classified from call sites and defaults only. They are not deep-read yet (Phase 6/7/11).
-- G2: Risk overlay (`systems/risk_overlay.py`) was classified only.
-- G3: Cost model internals (`pandl_cash_costs.py`, `pandl_SR_cost.py`, `sysobjects/instruments.py:instrumentCosts`) were classified only (Phase 12).
+- G1: PARTLY CLOSED in Phase 5. The DM formula and correlation sampling are now VERIFIED. Still open: optimiser internals (`sysquant/optimisation/*`), pooled forecast correlation, and the correlation `cleaning` path (Phases 6/11/14).
+- G2: PARTLY CLOSED. The overlay formula and default-off wiring are VERIFIED. `calc_portfolio_risk_series` and `seriesOfStdevEstimates.shocked()` are not read.
+- G3: PARTLY CLOSED. Cash-cost model and SR cost per trade VERIFIED. `pandl_SR_cost.py` not read (Phase 12).
+- G6 (new): D01 data/roll construction, P07 compounding capital variants and P09 dynamic optimisation remain UNVERIFIED.
 - G4: Production and execution (sysexecution, sysbrokers, sysproduction) were mapped only at the entry-point level (Phase 19 optional).
 - G5: The P&L fill-timing reading (`delayfill`) is static only (Phase 16 will trace it empirically).
 
@@ -82,7 +84,7 @@ use_forecast_scale_estimates: False (l.131) · use_forecast_div_mult_estimates: 
 
 ## Important findings (P0 so far)
 
-See report §3–§5 and the Executive Summary. Key items: F1 zero→NaN→ffill (EXP-01); F2 base-cache argument blindness (EXP-02); F3 cache keys exclude config/data (DOCUMENTED + VERIFIED); F4 the forecast scalar backfills its first estimate (`backfill=True` default, comment "SLIGHTLY CHEATING"); F5 production hard-codes trade-to-edge; F6 docs "Tx1 dataframe" vs `pd.Series` coercion (EXP-03).
+See report §3–§5 and the Executive Summary. Key items: F1 zero→NaN→ffill (EXP-01); F2 base-cache argument blindness (EXP-02); F3 cache keys exclude config/data (DOCUMENTED + VERIFIED); F4 the forecast scalar backfills its first estimate (`backfill=True` default, comment "SLIGHTLY CHEATING"); F5 production hard-codes trade-to-edge; F6 docs "Tx1 dataframe" vs `pd.Series` coercion (EXP-03). **Phase 5:** F7 cost vol deflator and SR cost per trade are anchored to the end of the sample (pre-flag for Phase 14); F8 risk overlay is OFF by default and not documented in `docs/`; F9 the speed limit uses a full-sample turnover and is effectively OFF by default; F10 DV7 (documented default vol function and floor differ from the configured default), DV8/DV9 (config-key names).
 
 ## Optional-phase status
 
@@ -90,7 +92,13 @@ Phase 10: not started. Phase 15: not started (EXP-01/02 are Signal-Contract/Stag
 
 ## Operator-reported usage / cost
 
-- P0 through the Phase 4 gate: **NOT YET REPORTED** (operator to fill in). Budget plan (spec §18): P0 35%, P1A 40%, P1B 15%, reserve 10%.
+- P0 through the Phase 4 gate: **NOT RECORDED.** The operator's message contained the literal placeholder "[INSERT ACTUAL USAGE/COST HERE]"; the operator should supply the actual figure.
+- Phase 5 (session 2): not recorded (operator to supply). Budget plan (spec §18): P0 35%, P1A 40%, P1B 15%, reserve 10%.
+
+## Session log
+
+- Session 1 (2026-09-24): Phases 1–4; commit `bae290c`. The first push was blocked until the Claude GitHub App was installed on the fork, then succeeded.
+- Session 2: Phase 4 approved; spec files added; Phase 5 completed. SHA re-verified `8958c49`.
 
 ## Safety log
 

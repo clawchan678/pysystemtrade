@@ -1,3 +1,4 @@
+# Phase 4 generator only. Since Phase 5 the CSV itself is canonical and is edited in place; do NOT re-run this script (it would revert Phase 5 changes).
 import csv
 H=["component_id","path","layer","alpha_specific","survives_if_contract_met","survives_if_contract_violated","contract_dependency","swap_evidence","stateful","doc_status","impl_evidence","divergence","swing_transfer_label","intraday_transfer_label","last_phase"]
 N="NOT YET ASSESSED"
