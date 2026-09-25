@@ -26,11 +26,12 @@ for i,d in exp.items():
     for k,v in d.items(): chk("CSV %s.%s == %s (is %s)"%(i,k,v,byid[i][k]), byid[i][k]==v)
 chk("last_phase in {5,...,16} (session 8 adds 15, 16)", all(r["last_phase"] in ("5","6","7","8","9","10","11","12","13","14","15","16","17","18") for r in rows))
 chk("swap_evidence as Phase 4 (A06 TESTED, A07 HYPOTHESIS, rest INFERRED/UNVERIFIED)", all(r["swap_evidence"]==({"A06_FORECAST_COMBINATION":"TESTED","A07_FORECAST_MAPPING":"HYPOTHESIS"}.get(r["component_id"], r["swap_evidence"] if r["swap_evidence"] in ("INFERRED","UNVERIFIED") else "X")) for r in rows))
-chk("transfer labels NOT YET ASSESSED", all(r["swing_transfer_label"]==r["intraday_transfer_label"]=="NOT YET ASSESSED" for r in rows))
+TL={"CONCEPTUALLY PORTABLE — UNTESTED","POTENTIALLY PORTABLE — REQUIRES REDESIGN","DAILY-DEPENDENT","TRANSFER NOT JUSTIFIED"}
+chk("transfer labels assessed (P2 Deliverable 1): no NOT YET ASSESSED; all in the four approved labels", all(r["swing_transfer_label"] in TL and r["intraday_transfer_label"] in TL for r in rows))
 for k in ["DV7","DV8","DV9"]: chk(k+" in divergence register", ("| %s |"%k) in R)
 chk("progress: Phase 5 COMPLETE", "P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE" in P)
 NT=P[P.index("**Exact next task:**"):P.index("## Unresolved issues")]
-chk("progress: next task = STOP / await operator decision on P2", "**Exact next task:** **STOP. Await an operator decision on P2**" in P and "Do not start P2 without explicit operator approval" in P)
+chk("progress: next task = STOP / await P2 Deliverable 2", "**Exact next task:** **STOP. Await P2 Deliverable 2**" in P and "Do not start it without explicit operator approval" in P)
 chk("progress: usage NOT RECORDED", "NOT RECORDED" in P)
 chk("report status line: P1A COMPLETE; P1B COMPLETE; Phase 19 skipped", "P1A COMPLETE" in R[:2000] and "Phase 15 §16" in R[:2000] and "Phase 18 §19" in R[:2000] and "P1B COMPLETE — P1B STOP" in R[:2000] and "Phase 19 SKIPPED — RESOURCE PRIORITY" in R[:2000])
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)
@@ -219,6 +220,6 @@ chk("Executive Summary <= 20 bullets after Phase 18", len(__import__("re").finda
 SK="Phase 19 — SKIPPED — RESOURCE PRIORITY. Static review of the research-to-live connection, broker integration, order generation, position reconciliation, account state, persistence, restart behavior, monitoring, logging, overrides, limits, and error handling was not performed. This is a known gap, not a finding of NO ISSUE IDENTIFIED."
 s20=R[R.index("## 20. Live / Production Architecture"):R.index("## 21")]
 chk("Phase 19 skip text recorded verbatim in report section 20 and progress file", SK in s20 and SK in P and "NOT YET AUDITED (P1B Phase 19" not in R)
-chk("progress: P1B COMPLETE — P1B STOP; P2 NOT STARTED", "**P1B (Phases 15–19)** | **COMPLETE — P1B STOP**" in P and "| P2 (Phases 20–26) | NOT STARTED |" in P)
+chk("progress: P1B COMPLETE — P1B STOP; P2 IN PROGRESS (Deliverable 1 applied, Deliverable 2 pending)", "**P1B (Phases 15–19)** | **COMPLETE — P1B STOP**" in P and "| P2 (Phases 20–26) | **IN PROGRESS.** Deliverable 1 APPLIED" in P and "Deliverable 2 (§23 Phase 22, §26 Phase 25, §27 Phase 26) PENDING |" in P)
 chk("O-P18-3 recorded: repo-code property, VERIFIED here, INFERRED version-independent", "**O-P18-3" in R and "**VERIFIED** on this environment" in R and "**INFERRED** to reproduce on other Python 3 versions" in R and "O-P18-3" in P)
 chk("P1B close usage UNRECORDED", "P1B close (session 8): **UNRECORDED**" in P)

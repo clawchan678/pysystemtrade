@@ -2407,13 +2407,11 @@ This layer shows the sharpest swing/intraday split in the whole inventory: every
 ### 24.6 Intraday transfer view (grouped by label)
 
 | Label | Count | Components |
-| --- | --- | --- |
+|---|---|---|
 | CONCEPTUALLY PORTABLE — UNTESTED | 8 | C01, C02, C04, R08, P04, P07, P08, E06 |
-| POTENTIALLY PORTABLE — REQUIRES REDESIGN | 24 | SC, C03, C05, D01, A01, A02, A04, A05, A06, A08, R01–R07, R09, R10, R11, P01, P02, P03, P05, P06, E02, E04 |
-| DAILY-DEPENDENT | 4 | A03, E01, E03, and the market-impact/stops-targets gaps noted structurally (not separate CSV rows) |
-| TRANSFER NOT JUSTIFIED | 5 | P09, E05, A07 |
-
-(Row counts across 24.5/24.6 total 41; the market-impact and stops/targets items are structural gaps discussed in §22.B, not separate inventory rows, and are not double-counted.)
+| POTENTIALLY PORTABLE — REQUIRES REDESIGN | 27 | SC, C03, C05, D01, A01, A02, A04, A05, A06, A08, R01–R07, R09–R11, P01–P03, P05, P06, E02, E04 |
+| DAILY-DEPENDENT | 3 | A03, E01, E03 |
+| TRANSFER NOT JUSTIFIED | 3 | P09, E05, A07 |
 
 ---
 
