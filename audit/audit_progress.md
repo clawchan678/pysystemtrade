@@ -58,11 +58,13 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 | P1B Phase 16 — Position / lag / P&L timing | COMPLETE (session 8, operator-authorised Phase 16 only; report §17: US10 traced on three rule-selected dates (ordinary 2023-02-28, roll 2023-02-09, boundary 2024-03-28); decision at close t → fill at close t+1 → exposure from t+1; no same-day exposure; consistent with docs; no new divergence; O-P16-1…3) — **STOPPED BEFORE PHASE 17** |
 | P1B Phase 17 — Degrees of freedom / research safeguards | COMPLETE (session 8, operator-authorised Phase 17 only; report §18: parameter inventory (fixed / estimated / optimized / heuristic / adaptive), safeguards inventory, tooling inventory; static only, no experiments; O-P17-1…3) — **STOPPED BEFORE PHASE 18** |
 | P1B Phase 18 — Testing / validation infrastructure | COMPLETE (session 8, operator-authorised Phase 18 only; report §19: suites run in a scratch copy (quick 101 passed / 40 skipped / 3 xfailed; slow 17 passed); 66 tests silently uncollected (O-P18-1); end-to-end tests assertion-free (O-P18-2); PF-1/PF-2/PF-3/PF-4/PF-11/PF-15 invisible to the repo's tests) — **STOPPED BEFORE PHASE 19** |
-| P1B Phase 19, P2 | NOT STARTED |
+| P1B Phase 19 — Live / production architecture | **Phase 19 — SKIPPED — RESOURCE PRIORITY. Static review of the research-to-live connection, broker integration, order generation, position reconciliation, account state, persistence, restart behavior, monitoring, logging, overrides, limits, and error handling was not performed. This is a known gap, not a finding of NO ISSUE IDENTIFIED.** (operator decision, session 8; spec §40 resource-priority allowance) |
+| **P1B (Phases 15–19)** | **COMPLETE — P1B STOP** (Phases 15–18 done; Phase 19 SKIPPED — RESOURCE PRIORITY) |
+| P2 (Phases 20–26) | NOT STARTED |
 
-**Current phase:** P1B Phase 18 COMPLETE — **STOPPED BEFORE PHASE 19** (session 8). Phase 19 not started.
+**Current phase:** P1B COMPLETE — **P1B STOP** (session 8). Phases 15–18 done; Phase 19 SKIPPED — RESOURCE PRIORITY. P2 not started.
 
-**Exact next task:** **STOP. Await operator authorization** after Phase 18 (report §19). Do not start Phase 19 without explicit operator approval.
+**Exact next task:** **STOP. Await an operator decision on P2** (spec §41–§50: Phases 20–26). Do not start P2 without explicit operator approval.
 
 ## Unresolved issues
 
@@ -74,6 +76,8 @@ MODE B (web / non-persistent Claude environment). Persistent storage = git branc
 - U5: **RESOLVED** (operator ruling, session 2). §12 is applied literally: direct source inspection does not justify an INFERRED → VERIFIED upgrade. R04 and R07 `impl_evidence` were reverted to **INFERRED** in the CSV, report cards 8 and 11, the §6.5 log, and the Executive Summary. The underlying observations and their provenance are kept. P04/E02 (UNVERIFIED → VERIFIED) are unaffected.
 - U7: RESOLVED (operator decision, session 2). The E06_PROD_OVERRIDES_LIMITS row stays in the inventory as Tier 2 / VERIFIED (41 rows). It changes only if the audit itself establishes a reason.
 - U6: RESOLVED (session 2 check). The Tier 1 ID count was misstated as 27 in the report and progress file; the correct count is 26 (26 + SC + 13 Tier 2 = 40). Card 6 stated A06 `swap_evidence` as INFERRED while the CSV holds TESTED (Phase 4, approved); the card text was aligned to the CSV, and no evidence value was changed.
+- O-P18-3 (P1B close): the `test_accounts.py` collection error is a property of the repository's own code, not of this environment. A star-import chain (`pst_logger` `import datetime` → `adapter` → `logger` → `csv_futures_sim_test_data`, no `__all__`) rebinds `datetime` to the module. VERIFIED on Python 3.11.15; INFERRED to reproduce on other Python 3 versions (language semantics; not run). Report §19.
+- Phase 19 gap: Phase 19 — SKIPPED — RESOURCE PRIORITY. Static review of the research-to-live connection, broker integration, order generation, position reconciliation, account state, persistence, restart behavior, monitoring, logging, overrides, limits, and error handling was not performed. This is a known gap, not a finding of NO ISSUE IDENTIFIED.
 - L-P15-1 (documented limitation, Phase 15): no rule was stated in advance for choosing a replacement truncation cutoff when a declared one fails. In EXP-06 the declared 2009-12-31 cutoff could not run (EUROSTX has no data before 2014-03-13) and was replaced once, after the failure, by 2016-12-30 (the first year end with all six instruments live). That replacement was chosen after the declaration, not by a pre-stated rule. No other cutoff was tried (report §16.1).
 - O-P16-2 status (roll costs booked on equally spaced pseudo-fill dates, not actual roll dates): **report-only prose, not a CSV row** (decided in Phase 17 at operator request). The CSV is a component inventory held at 41 rows. The behaviour belongs to row E02_COST_MODEL (Card 12, §13). Evidence: VERIFIED (code + EXP-12 trace). The effect size was not measured; no further investigation (report §17.5).
 
@@ -181,7 +185,7 @@ See report §3–§5, §8 and the Executive Summary. Key items: F1 zero→NaN→
 
 ## Optional-phase status
 
-Phase 10: COMPLETE (session 7; this line said ON HOLD until session 8, and was corrected here as a stale status). Phase 15: **COMPLETE** (session 8, operator-authorised; report §16; EXP-06…EXP-11). Earlier EXP-01…05 are contract, caching and mechanism checks, not Phase 15 tests. Phase 19: not started.
+Phase 10: COMPLETE (session 7; this line said ON HOLD until session 8, and was corrected here as a stale status). Phase 15: **COMPLETE** (session 8, operator-authorised; report §16; EXP-06…EXP-11). Earlier EXP-01…05 are contract, caching and mechanism checks, not Phase 15 tests. Phase 19: **SKIPPED — RESOURCE PRIORITY** (operator decision, session 8): a known gap, not a finding of NO ISSUE IDENTIFIED.
 
 ## Operator-reported usage / cost
 
@@ -195,6 +199,7 @@ Phase 10: COMPLETE (session 7; this line said ON HOLD until session 8, and was c
 - Phase 10 (session 7): **UNRECORDED**
 - Phase 15 (session 8): **UNRECORDED** (not estimated)
 - Phase 16 (session 8): **UNRECORDED** (not estimated; the operator asked to set usage aside for this phase)
+- P1B close (session 8): **UNRECORDED**
 - Phase 18 (session 8): **UNRECORDED** (the operator tracks spend separately; no further requests).
 - Phase 17 (session 8): **UNRECORDED**. The operator asked for usage against the P1B ceiling before Phase 17; Claude Code has no view of account-level usage and did not estimate it (spec §18). The P1B ceiling (15% share) cannot be converted to dollars from the audit files.
 - Operator-reported REMAINING Claude Code credit balance at session 5 start: $66 (reported by the operator in the session 5 instructions). This is a remaining balance, NOT a consumed-cost figure and NOT audit usage/cost; no consumed figure is derived from it.
@@ -202,6 +207,7 @@ Phase 10: COMPLETE (session 7; this line said ON HOLD until session 8, and was c
 
 ## Session log
 
+- Session 8, P1B close (operator decision). Phase 19 was SKIPPED — RESOURCE PRIORITY, with no Phase 19 inspection. The `test_accounts` collection error was traced to the repository's own star-import chain (O-P18-3). Stage-end checklist (spec §52): report updated; progress file updated with the next task; CSV validated (unchanged at close: no component was assessed); repository commit `8958c49` still matches; no unsafe or live action occurred. **P1B STOP.**
 - Session 8, Phase 18 (operator-authorised; Phase 18 only). Existing suites run in a scratch copy, so the audited clone could not be written by test side effects. Report §19 written. Executive Summary bullet 17 and the status line updated. Evidence files are under `scaffolding/phase18/`. CSV: `last_phase` → 18 on C03, R01, R08, R09, E02, P09; nothing else. `audit/repo` stayed at `8958c49`, clean. **STOPPED BEFORE PHASE 19.**
 - Session 8, Phase 17 (operator-authorised; Phase 17 only). The usage request was answered as unavailable (not estimated). The O-P16-2 status was formalised as report-only. Phase 17 was static source inspection, with no experiments. Report §18 written. Executive Summary bullet 19 and the status line updated. CSV: `last_phase` → 17 on C04, A04, A05, R02, P01, P05; nothing else. `audit/repo` stayed at `8958c49`, clean. **STOPPED BEFORE PHASE 18.**
 - Session 8, Phase 16 (operator-authorised; Phase 16 only). Usage was requested first; no account-level figure is visible to Claude Code, and the operator then said to proceed without it. EXP-12/12b were run, scratch-only. Report §17 written. Executive Summary bullet 12 and the status line updated. CSV: `last_phase` → 16 on E01, P06, E02, D01; nothing else. `audit/repo` stayed at `8958c49`, clean. **STOPPED BEFORE PHASE 17.**

@@ -30,9 +30,9 @@ chk("transfer labels NOT YET ASSESSED", all(r["swing_transfer_label"]==r["intrad
 for k in ["DV7","DV8","DV9"]: chk(k+" in divergence register", ("| %s |"%k) in R)
 chk("progress: Phase 5 COMPLETE", "P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE" in P)
 NT=P[P.index("**Exact next task:**"):P.index("## Unresolved issues")]
-chk("progress: next task = STOP / await operator authorization after Phase 18 (Phase 19 not started)", "**Exact next task:** **STOP. Await operator authorization** after Phase 18" in P and "Do not start Phase 19" in P)
+chk("progress: next task = STOP / await operator decision on P2", "**Exact next task:** **STOP. Await an operator decision on P2**" in P and "Do not start P2 without explicit operator approval" in P)
 chk("progress: usage NOT RECORDED", "NOT RECORDED" in P)
-chk("report status line: P1A COMPLETE; Phases 15-16 COMPLETE — STOPPED BEFORE PHASE 17", "P1A COMPLETE — P1A STOP" in R[:2000] and "Phase 15 COMPLETE" in R[:2000] and "Phase 16 COMPLETE" in R[:2000] and "Phase 17 COMPLETE" in R[:2000] and "Phase 18 COMPLETE" in R[:2000] and "STOPPED BEFORE PHASE 19" in R[:2000])
+chk("report status line: P1A COMPLETE; P1B COMPLETE; Phase 19 skipped", "P1A COMPLETE" in R[:2000] and "Phase 15 §16" in R[:2000] and "Phase 18 §19" in R[:2000] and "P1B COMPLETE — P1B STOP" in R[:2000] and "Phase 19 SKIPPED — RESOURCE PRIORITY" in R[:2000])
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)
 
 chk("Card 6 swap_evidence matches CSV TESTED", "**swap_evidence:** **TESTED**" in R[R.index("#### Card 6"):R.index("#### Card 7")])
@@ -111,7 +111,7 @@ chk("section 10 covers the spec 39 dimensions", all(k in s10 for k in ["Time adv
 chk("section 10 classifies the architecture and lists higher-frequency assumptions", "### 10.3 Architecture classification" in s10 and "### 10.6 Assumptions relevant to higher-frequency transfer" in s10)
 chk("section 10 raises DISC-3 without editing earlier text; UD5 in register", "| DISC-3 |" in s10 and "| UD5 |" in R and "P06 is the only path-dependent step in the backtest" in R[R.index("## 4. Alpha"):R.index("## 5. Signal")])
 chk("section 10 leaves pre-flags unclassified", "CONFIRMED ISSUE |" not in s10 and "POSSIBLE ISSUE |" not in s10)
-chk("progress: Phases 9 and 10 COMPLETE; P1A STOP; Phase 10 not skipped", "P1A Phase 9 — Simulation / backtest architecture | COMPLETE" in P and "| P1A Phase 10 — Data / contract / roll architecture | COMPLETE" in P and "**P1A (Phases 9–14)** | **COMPLETE — P1A STOP**" in P and "SKIPPED" not in P[P.index("## Stage / phase status"):P.index("## Unresolved issues")])
+chk("progress: Phases 9 and 10 COMPLETE; P1A STOP; Phase 10 not skipped", "P1A Phase 9 — Simulation / backtest architecture | COMPLETE" in P and "| P1A Phase 10 — Data / contract / roll architecture | COMPLETE" in P and "**P1A (Phases 9–14)** | **COMPLETE — P1A STOP**" in P and "SKIPPED" not in [l for l in P.split("\n") if l.startswith("| P1A Phase 10 ")][0])
 chk("progress: session 6 setup attempt recorded", "Session 6: scratch clone and venv recreated in **setup attempt 1 of 2**" in P)
 
 # ---- P1A Phase 14 (session 6) ----
@@ -214,3 +214,11 @@ chk("run results and collection evidence files present", all(__import__("os").pa
 chk("CSV: exactly C03,E02,P09,R01,R08,R09 at last_phase 18", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="18")==["C03","E02","P09","R01","R08","R09"])
 chk("progress: Phase 18 COMPLETE, stopped before 19; usage UNRECORDED; TEST-RUN rows", "P1B Phase 18 — Testing / validation infrastructure | COMPLETE" in P and "STOPPED BEFORE PHASE 19" in P and "Phase 18 (session 8): **UNRECORDED**" in P and "| TEST-RUN-1 |" in P and "| TEST-RUN-2 |" in P)
 chk("Executive Summary <= 20 bullets after Phase 18", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+
+# ---- P1B close (session 8) ----
+SK="Phase 19 — SKIPPED — RESOURCE PRIORITY. Static review of the research-to-live connection, broker integration, order generation, position reconciliation, account state, persistence, restart behavior, monitoring, logging, overrides, limits, and error handling was not performed. This is a known gap, not a finding of NO ISSUE IDENTIFIED."
+s20=R[R.index("## 20. Live / Production Architecture"):R.index("## 21")]
+chk("Phase 19 skip text recorded verbatim in report section 20 and progress file", SK in s20 and SK in P and "NOT YET AUDITED (P1B Phase 19" not in R)
+chk("progress: P1B COMPLETE — P1B STOP; P2 NOT STARTED", "**P1B (Phases 15–19)** | **COMPLETE — P1B STOP**" in P and "| P2 (Phases 20–26) | NOT STARTED |" in P)
+chk("O-P18-3 recorded: repo-code property, VERIFIED here, INFERRED version-independent", "**O-P18-3" in R and "**VERIFIED** on this environment" in R and "**INFERRED** to reproduce on other Python 3 versions" in R and "O-P18-3" in P)
+chk("P1B close usage UNRECORDED", "P1B close (session 8): **UNRECORDED**" in P)
