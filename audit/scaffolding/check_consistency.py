@@ -31,7 +31,7 @@ chk("transfer labels assessed (P2 Deliverable 1): no NOT YET ASSESSED; all in th
 for k in ["DV7","DV8","DV9"]: chk(k+" in divergence register", ("| %s |"%k) in R)
 chk("progress: Phase 5 COMPLETE", "P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE" in P)
 NT=P[P.index("**Exact next task:**"):P.index("## Unresolved issues")]
-chk("progress: next task = STOP / await P2 Deliverable 2", "**Exact next task:** **STOP. Await P2 Deliverable 2**" in P and "Do not start it without explicit operator approval" in P)
+chk("progress: next task = STOP / await operator review of P2", "**Exact next task:** **STOP. Await operator review of P2**" in P)
 chk("progress: usage NOT RECORDED", "NOT RECORDED" in P)
 chk("report status line: P1A COMPLETE; P1B COMPLETE; Phase 19 skipped", "P1A COMPLETE" in R[:2000] and "Phase 15 §16" in R[:2000] and "Phase 18 §19" in R[:2000] and "P1B COMPLETE — P1B STOP" in R[:2000] and "Phase 19 SKIPPED — RESOURCE PRIORITY" in R[:2000])
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)
@@ -220,6 +220,7 @@ chk("Executive Summary <= 20 bullets after Phase 18", len(__import__("re").finda
 SK="Phase 19 — SKIPPED — RESOURCE PRIORITY. Static review of the research-to-live connection, broker integration, order generation, position reconciliation, account state, persistence, restart behavior, monitoring, logging, overrides, limits, and error handling was not performed. This is a known gap, not a finding of NO ISSUE IDENTIFIED."
 s20=R[R.index("## 20. Live / Production Architecture"):R.index("## 21")]
 chk("Phase 19 skip text recorded verbatim in report section 20 and progress file", SK in s20 and SK in P and "NOT YET AUDITED (P1B Phase 19" not in R)
-chk("progress: P1B COMPLETE — P1B STOP; P2 IN PROGRESS (Deliverable 1 applied, Deliverable 2 pending)", "**P1B (Phases 15–19)** | **COMPLETE — P1B STOP**" in P and "| P2 (Phases 20–26) | **IN PROGRESS.** Deliverable 1 APPLIED" in P and "Deliverable 2 (§23 Phase 22, §26 Phase 25, §27 Phase 26) PENDING |" in P)
+chk("progress: P1B COMPLETE — P1B STOP; P2 COMPLETE", "**P1B (Phases 15–19)** | **COMPLETE — P1B STOP**" in P and "| P2 (Phases 20–26) | **COMPLETE** (session 9)" in P)
+chk("report: sections 21-27 written, no Deliverable 2 placeholder", all(("## %d. "%n) in R for n in range(21,28)) and "NOT YET AUDITED (Deliverable 2 pending)" not in R and "Comparison questions: NOT YET AUDITED (P2)" not in R)
 chk("O-P18-3 recorded: repo-code property, VERIFIED here, INFERRED version-independent", "**O-P18-3" in R and "**VERIFIED** on this environment" in R and "**INFERRED** to reproduce on other Python 3 versions" in R and "O-P18-3" in P)
 chk("P1B close usage UNRECORDED", "P1B close (session 8): **UNRECORDED**" in P)

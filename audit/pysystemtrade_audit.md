@@ -4,7 +4,7 @@ Audited commit: `pst-group/pysystemtrade` @ **`8958c49`** (`8958c49c38b1e4a8c07f
 All citations below are `path:lines @ 8958c49` unless stated otherwise.
 Evidence tags: VERIFIED / DOCUMENTED / INFERRED / HYPOTHESIS / UNVERIFIED (spec §12). The counterfactual tag `swap_evidence` is kept separate (spec §13).
 
-Status: **P0 complete (Phases 1–8, all approved). P1A COMPLETE (Phases 9–14). P1B COMPLETE — P1B STOP** (session 8, operator-authorised phase by phase: Phase 15 §16 (PF-11 wording corrected, §16.12), Phase 16 §17, Phase 17 §18, Phase 18 §19; **Phase 19 SKIPPED — RESOURCE PRIORITY**, §20). Next: STOP; await operator decision on P2 (Phases 20–26 not started).
+Status: **P0 complete (Phases 1–8, all approved). P1A COMPLETE (Phases 9–14). P1B COMPLETE — P1B STOP** (session 8, operator-authorised phase by phase: Phase 15 §16 (PF-11 wording corrected, §16.12), Phase 16 §17, Phase 17 §18, Phase 18 §19; **Phase 19 SKIPPED — RESOURCE PRIORITY**, §20). **P2 COMPLETE** (session 9: Phases 20, 21, 23, 24 → §21, §22, §24, §25; Phases 22, 25, 26 → §23, §26, §27). Next: STOP; operator review of P2.
 
 ---
 
@@ -2360,8 +2360,66 @@ No replacement system is designed here, per spec §45.
 
 ---
 
-## 23. Swing Operational Readiness
-NOT YET AUDITED (Deliverable 2 pending)
+## 23. Swing Operational Readiness (Phase 22)
+
+**Scope and evidence basis (spec §46).** This section separates two questions for each item:
+- **Research / reference usability:** can the audited machinery be read, run and relied on as a research reference at swing cadence (spec §5: decisions at most once per trading day, on daily-or-slower data)?
+- **Live operational requirements:** what running a swing system live would need from this area, and what the audit established about pysystemtrade's live code for it.
+
+It makes no adoption recommendation (spec §46) and ranks nothing. P2 is synthesis over the audit files (spec §41). Most rows cite earlier sections.
+
+**The Phase 19 gap governs the live half of this section.** Phase 19 (live / production architecture) was SKIPPED — RESOURCE PRIORITY (§20). The only live-side facts established are:
+- the production flow edges L1–L5 up to broker-order creation (§9.5);
+- the E03/E04 card (Card 16), E06 overrides and limits (§7.10);
+- the research/live consistency table (§13.5).
+
+Everything else on the live side is **UNVERIFIED**. Where a live column below says "UNVERIFIED", it means *not examined*. It does **not** mean a problem was found, and it is not NO ISSUE IDENTIFIED.
+
+**Session 9 targeted listing (the only repository access for this section).** Several spec §46 items (margin, micro contracts, capital, storage, monitoring, deployment) were never examined in P0/P1. For those, one read-only step was run in the pinned clone `audit/repo` @ `8958c49` (clean before and after):
+- a `git ls-files` listing of file names;
+- a row count of the shipped `data/futures/csvconfig/instrumentconfig.csv` and of the shipped price directories.
+
+No source file was opened and nothing was executed. Findings from it are labelled **VERIFIED (listing)**: they establish that a file with that name exists, and **nothing about its behaviour** (spec §16: names are not evidence of behaviour).
+
+### 23.1 Item-by-item
+
+| Item | Research / reference usability (swing) | Live operational requirement and what is known | Evidence | Not assessable in this audit |
+|---|---|---|---|---|
+| **Data** | The default sim data is the shipped CSVs (`csvFuturesSimData`). 252 instruments have both adjusted and multiple prices, and all 252 have a row in the instrument config. The decision series is `daily_prices` = `resample("1B").last()` of the back-adjusted price, which is swing's native granularity (§21.1). Stored rows have irregular timestamps; hourly access exists but is not the default. | Production reads its full history from a database through a sim-data wrapper (L1), fed by the daily updaters `update_historical_prices`, `update_multiple_adjusted_prices` and `update_fx_prices`. Those updaters are listed, not read. | §11.1; §2; §9.5 L1 VERIFIED. Counts: VERIFIED (listing, session 9) | How the shipped historical CSVs were built (§11.7, UNVERIFIED). Production updater internals and data-quality checks (not read). The shipped data was last changed in commit `44208025` (2024-05-01, §11.7); how far each file's history extends was not checked |
+| **Contracts** | Instrument metadata (`Pointsize`, `Currency`, cost fields) is **one static row per instrument with no date dimension**. Edits apply to all history, e.g. the SGX multiplier change 10 → 2 (§11.8). Expiry is approximated from the contract date plus a static `ExpiryOffset`. | Live contract resolution goes through the production DB and IB contract code (`sysbrokers/IB/ib_contracts.py` and related; listing only). | §11.8 VERIFIED; §11.9 POSSIBLE ISSUE (retrospective metadata) | Live contract selection and expiry handling (Phase 19 skipped); effect of metadata edits on rounding and costs (INFERRED only, §11.8) |
+| **Rolls** | Two mechanisms (§11.2). **R1 (research):** static offsets plus full-dataset price *availability*; roll dates are POSSIBLE ISSUE (§11.10(c)). Shipped calendars were backed out of the shipped multiple prices, so pre-calendar contract selection cannot be reproduced from shipped inputs (e.g. SOFR prices from 1984, calendar from 2020). **Panama** back-adjustment mutates earlier *levels* but not earlier *differences* (EXP-05, TESTED). In the backtest, roll costs are pseudo-fills on equally spaced dates, not actual roll days (O-P16-2, §17.5). | **R2 (live):** a roll-status process with volume/expiry parameters and operator confirmation by default; adjusted prices are re-stitched at the roll. Research R1 and live R2 differ, so research roll dates need not match live ones (INFERRED, not compared on data). A swing position held for days spans roll dates more often than an intraday one, so both mechanisms apply to it (INFERRED from the definitions). | §11.2–§11.4, §11.9–§11.10; EXP-05 TESTED; §17.5 VERIFIED | R2 trigger internals (UNVERIFIED, §11.2). Effect size of availability-based roll dating (raw contract prices not shipped, §11.12). Actual live roll orders (`sysexecution/stack_handler/roll_orders.py`, listing only, §13.5) |
+| **Carry** | Carry = annualised roll yield from the `PRICE`/`CARRY` columns; the value at *t* uses only prices at *t* (NO ISSUE IDENTIFIED, §11.10(b)). The carry contract per date comes from R1 or from the shipped multiple prices. Carry rules are in the default chapter-15 config, so carry reaches positions. | Production carry uses the same `rawdata` code over production multiple prices (INFERRED from L1: the same System is re-run; the production multiple-price updater was not read). | §11.5 VERIFIED; §9.5 L1 | Live multiple-price construction (updater not read) |
+| **FX** | Spot FX from `fx_prices_csv` (12 shipped files) or the DB; aligned by `reindex(..., ffill)`; no backward fill found in the FX path (NO ISSUE IDENTIFIED). | Live FX is updated by `update_fx_prices` (listed, not read) and consumed through the same System code (INFERRED from L1). | §11.6 VERIFIED; file count VERIFIED (listing) | FX updater internals; IB FX client (`sysbrokers/IB/ib_Fx_prices_data.py`, listing only) |
+| **Broker integration** | Not a research concern: the backtest is broker-free (E01 simulated fills). | The only broker integration present is IB via `ib_async` (`sysbrokers/IB/*`). What is VERIFIED is the path up to broker-order creation: L3 order generation (trade to `round(edge)`), L4 overrides and position limits, L5 contract orders and trade limits. **E05 (stacks, algos, IB client) is UNVERIFIED.** The docs' statement that there is no live trading system is stale (DV2). | §9.5 L1–L5 VERIFIED; §6.3 E05 UNVERIFIED; §20 | Order routing, algos, fill handling, partial fills, position reconciliation, error handling and restart behaviour (Phase 19 skipped). No broker connection was made (spec §10) |
+| **Instrument universe** | The shipped instrument config has **586 rows** in 14 asset classes (Equity 151, FX 91, Bond 82, Sector 61, SingleStock 54, Ags 44, Metals 38, OilGas 30, Housing 13, STIR 9, Vol 6, Weather 4, Other 2, CommodityIndex 1). **252** of them have shipped prices (Equity 57, FX 43, Ags 36, Bond 34, Sector 34, Metals 21, OilGas 20, Vol 4, Housing 2, Other 1). The default chapter-15 system trades **6** (CORN, EUROSTX, MXP, SOFR, US10, V2X). The universe resolves config weights → `config.instruments` → all data, minus exclusion lists written with current knowledge and applied to all history (PF-12(b), POSSIBLE ISSUE). | Production universe comes from the strategy config and production DB. Reports named `duplicate_market_report`, `remove_markets_report` and `liquidity_report` exist (listing only). | §3; §14.1; §15 PF-12; counts VERIFIED (listing, session 9) | Live universe maintenance, and what those reports compute (not read) |
+| **Diversification** | Instrument weights (P02) and the IDM (P03) are fixed in config by default; estimation (R06/R07) is opt-in, using weekly correlations of subsystem returns with `fit_end = period_start` (Card 11). The FDM is capped at 2.5. The pooled-stacking warning (DOCUMENTED in-source) concerns high-frequency data, not daily (§22.C). With 6 default instruments, how much diversification is achievable is a property of the chosen universe, which this audit did not measure. | Live re-runs the same System, so live weights and IDM equal the research values at the last row (E03, VERIFIED). | Cards 10–11 VERIFIED; §21.2 | Diversification achieved for any real account size or universe (not measured; performance claims excluded by spec §54) |
+| **Capital** | Sizing uses `notional_trading_capital` (default 1e6) and `percentage_vol_target` 16. The backtest default is **fixed** capital (`fixed_capital`); compounding variants are opt-in. Positions use the unshifted capital multiplier while account capital is shifted (O4/PF-6). | Production injects **current** capital as the notional constant (L1; `production_capital_method: full`), so research and live scale capital in different places (O5/P8-O5). Capital-update and allocation code exists: `update_total_capital`, `update_strategy_capital`, `interactive_update_capital_manual`, `sysbrokers/IB/ib_capital_data.py`, a `minimum_capital_report` (listing only). | Card 9; §8 O4/O5; §9.5 L1, P8-O5 VERIFIED; listing VERIFIED (listing) | How live total and strategy capital are computed and allocated; what the minimum-capital report computes (not read) |
+| **Margin** | **No margin, cash-balance or financing model was found in the backtest** (searched `systems/` for `margin`; absence UNVERIFIED beyond the searched terms, §10.2). Positions are sized by volatility only. | Production margin storage exists: `sysdata/production/margin.py`, `sysdata/mongodb/mongo_margin.py` (listing only). What is stored, where it comes from and whether it constrains positions or orders: **UNVERIFIED**. | §10.2, §10.6 item 7; listing VERIFIED (listing) | Any margin constraint on live positions; margin-to-capital relationships (not read; broker data unavailable, spec §10) |
+| **Micro contracts** | Micro contracts are present as ordinary instrument rows with their own metadata: 23 instrument codes contain "micro" and 12 have shipped prices (AUD, CAD, CHF, EUR, GBP FX micros; SP500, NASDAQ; GOLD, COPPER, CRUDE_W, GASOILINE; ETHER). Contract size enters sizing through `Pointsize`, so a smaller contract gives proportionally more contracts for the same notional risk before rounding (§11.8, INFERRED). Integer rounding happens in P06 and E04 (`round`). P09 (dynamic optimisation, the integer-contract alternative) is TRANSFER NOT JUSTIFIED for depth reasons (§21.3). | A `sysinit/futures/clone_large_to_small_contracts.py` tool exists (listing only). | §11.8; §7.9 rounding; §12.4; counts VERIFIED (listing, session 9) | Any micro-specific code path (no file-name hit beyond the one above; code not searched). Rounding effects at small account sizes (not tested) |
+| **Leverage** | No margin model, so leverage is not constrained by margin in the backtest (§10.2). Leverage-related controls: FDM/IDM `dm_max` 2.5 (Cards 8, 10), and the risk overlay's `max_risk_leverage` limit (P04, **OFF by default**, undocumented in `docs/`). | Live applies the risk overlay only if configured (same System). E06 position limits and overrides cap positions downstream (VERIFIED). Broker leverage limits: UNVERIFIED (E05). | Cards 8, 10, 15; §7.10 VERIFIED | Broker-imposed leverage or margin calls (Phase 19 skipped) |
+| **Storage** | Research reads shipped CSVs by default. Storage back-ends exist for CSV, Parquet, MongoDB and Arctic (`sysdata/{csv,parquet,mongodb,arctic}`). Estimated parameters live only in the cache unless exported; the export writes last values (O-P13-1). | Production stores a pickled backtest state and the merged config per run, deleted after `backtest_max_age: 30` days (§14.1). Backup tooling exists: `run_backups`, `backup_db_to_csv`, `backup_mongo_data_as_dump`, `backup_parquet_data_to_remote`, `backup_state_files`, `backup_arctic_to_parquet` (listing only). No config or code versioning found (§14.1; absence UNVERIFIED beyond the searched terms). | §2; §14.1 VERIFIED; listing VERIFIED (listing) | Parquet/Mongo read/write paths (not read, §11.11); backup completeness and restore behaviour (not read) |
+| **Computation** | The engine recomputes the whole history per System (no incremental path, §10.6 item 1). At swing cadence that is one recompute per decision day. Recorded runtimes in this audit: the 17 slow example tests took 228 s together (TEST-RUN-2); a P09 run on the six-instrument chapter-15 system took about 3 min (EXP-10). | Production re-runs the full System every run and uses only the last row (PF-9, E03 VERIFIED). | §10.6; §19; §16.7; progress file | Runtime and memory for a production-size universe (not measured). No performance claim is made (spec §54) |
+| **Monitoring** | Not a research concern. | Monitoring code exists: `syscontrol/monitor.py`, `report_process_status.py`, `list_running_pids.py`, reporting modules (`risk_report`, `reconcile_report`, `market_monitor_report`, `instrument_risk_report`, `status_report` and others), and a doc `docs/dashboard_and_monitor.md` (listing only). These were classified Tier 3 (not inventoried, §6.2). **No age check on stored optimal positions was observed** in the files searched (PF-10; G8, UNVERIFIED elsewhere). | §6.2; §9.5 L2–L3; listing VERIFIED (listing) | What is monitored, alerting, reconciliation behaviour (Phase 19 skipped; Tier 3) |
+| **Deployment** | Not a research concern. Backtests run from Python factory functions (e.g. `futures_system()`). | Production runs `sysproduction/run_*.py` processes under `syscontrol` scheduling (`control_config.yaml`, `timer_functions.py`, `run_process.py`), with a shipped `sysproduction/linux/crontab` and wrapper scripts (listing only). Production needs a private config (`private_config.yaml`, absent in the audit), a database and an IB gateway, none of which were available or used (spec §10). | §2 entry points; §3 live implications; listing VERIFIED (listing) | Scheduling order of `run_systems` vs `run_strategy_order_generator` (G8, UNVERIFIED); restart and failure handling (Phase 19 skipped) |
+
+### 23.2 What this section can and cannot support
+
+- **Research / reference usability at swing cadence is the better-evidenced half.** The data, contract, roll, carry and FX machinery was read in Phase 10 (§11, D01 VERIFIED for in-repo code). Its known limits are specific and recorded:
+  - retrospective static metadata (POSSIBLE ISSUE);
+  - availability-based research roll dates (POSSIBLE ISSUE);
+  - shipped-history construction (UNVERIFIED);
+  - no margin or financing model (absence UNVERIFIED beyond the searched terms);
+  - the end-anchored cost deflator (PF-2, CONFIRMED ISSUE, costs and net P&L only, TESTED).
+- **Live operational readiness is mostly not assessable from this audit.** Of the 16 spec §46 items, the live side of broker integration, margin, monitoring and deployment rests on file listings only, and the live side of every other item depends on production code that Phase 19 would have read.
+  - Established live facts: the research-to-live flow up to broker-order creation (§9.5 L1–L5), trade-to-edge hard-coding (DV3), the capital-scaling difference (O5/P8-O5), E06 overrides and limits, and the absence of an observed age check on stored positions (PF-10).
+  - Beyond those, this audit supports **no** statement that live operation at swing cadence works, or that it does not.
+- **Nothing here is a recommendation.** Readiness is described, not judged; items are not ranked (spec §43, §46, §54).
+
+### 23.3 Phase 22 change log (explicit)
+
+- No CSV field changed. `last_phase` unchanged on every row (P2 is synthesis, as for Deliverable 1).
+- New evidence this section: the session 9 file listing and data-file counts above, all VERIFIED (listing). No behaviour claim is based on them.
+- No new DV/UD entries.
 
 ---
 
@@ -2465,11 +2523,289 @@ Full matrix, all 41 inventory rows plus the Signal Contract. "What breaks" is le
 
 ---
 
-## 26. Final Research Framework Synthesis
-NOT YET AUDITED (Deliverable 2 pending)
+## 26. Final Research Framework Synthesis (Phase 25)
+
+**Basis.** This section is synthesis only (spec §41, §49). It draws on §2–§22 and §24–§25 and on the canonical CSV. It adds no new evidence and reads no source. Each answer carries the evidence tag of the finding it rests on. Where the CSV and earlier report text differ, **the CSV is used** and the difference is named (26.3). Nothing below is a recommendation, and no component is ranked (spec §43, §54).
+
+### 26.1 Structured answers (spec §49)
+
+**1. What is the actual conceptual architecture?**
+- A `System` is a container of named `SystemStage` objects plus one `simData` and one `Config`. Stages compute **whole-history pandas series on demand**: a lazy, pull-based tree memoised in a per-System cache. There is no clock or event loop. VERIFIED (§3; §10.1).
+- The default pipeline is rawdata → rules → forecast scale/cap → forecast combination (FDM, then a combined cap or mapping) → position sizing → portfolio (instrument weights, IDM, optional risk overlay, buffer edges) → accounts (buffered position path, P&L, costs). VERIFIED (§9.1, Executive Summary 2).
+- Research estimators (scalars, correlations, weights, FDM, IDM, turnover and SR cost) are opt-in feedback edges into that pipeline, all OFF by default except volatility. VERIFIED (§9.4; Executive Summary 10).
+- Live operation re-runs the same System each run, stores the last row's buffer edges, and generates orders from them through overrides and limits to the order stacks and broker. VERIFIED up to broker-order creation (§9.5 L1–L5); the stacks and broker (E05) are UNVERIFIED.
+
+**2. What is the alpha framework?**
+- Eight ALPHA-layer rows (A01–A08). Only **A03** (the provided rules) is alpha-specific. The others (the rule wrapper and Rules stage, scaling, cap, combination, mapping, FDM application) sit in the alpha pipeline but are signal-agnostic machinery. VERIFIED (CSV `alpha_specific`; §4).
+- The interface they share is the **Signal Contract** (§5, SC1–SC16): a signed, continuous, daily `pd.Series` per (instrument, rule variation), evaluated over the whole history, scaled to average |10| and capped at ±20. Position is linear in the forecast. Exact zeros become NaN and are forward-filled (SC9, TESTED by EXP-01).
+
+**3. What is the research / estimation framework?**
+- Eleven RESEARCH rows (R01–R11): forecast-scalar, volatility, forecast-correlation, FDM, forecast-weight, instrument-weight and instrument-correlation/IDM estimation; fitting dates; turnover and SR cost; the forecast P&L proxy; the cost-ceiling speed limit. VERIFIED (CSV; §6).
+- Every estimation switch defaults OFF except volatility (R02). VERIFIED (Executive Summary 10).
+- Fit windows end at `period_start` (R08), and default estimators are exponential, taking rows strictly before `period_start`. No causal violation was identified at the date-window level. VERIFIED (§8; §15).
+- The known exceptions are recorded, not resolved:
+  - PF-1 scalar backfill, and PF-3/PF-4 end-of-sample SR cost × full-sample turnover: CONFIRMED ISSUE ONLY WHEN NON-DEFAULT OPTION ENABLED, TESTED (§16);
+  - PF-11 end-anchored fit grid: POSSIBLE ISSUE (§16.12);
+  - PF-2, the end-anchored cost deflator: CONFIRMED ISSUE with default ON, and TESTED as affecting costs and net P&L only in the default system (§16.3).
+- `impl_evidence` for R03–R07 stays INFERRED under U5.
+
+**4. What is the portfolio / risk framework?**
+- Nine PORTFOLIO_RISK rows (P01–P09): vol-targeted position sizing (√256 annualisation), instrument-weight and IDM application, an optional risk overlay (OFF by default, undocumented), buffer edges and the path-dependent buffered position (P06, the only path-dependent step in the default backtest), a capital multiplier (fixed by default), a long-only constraint, and dynamic optimisation (P09, an alternative, not default). VERIFIED (§6; §12), except P09, which is PARTIALLY AUDITED — RESOURCE PRIORITY (§12.4).
+
+**5. What is the execution framework?**
+- Six EXECUTION rows. **Simulated:** E01 infers fills from position changes, with a decision at close t filled at close t+1 (TESTED by the Phase 16 trace, §17); E02 is a linear cost model with roll pseudo-fills and an end-anchored deflator. **Live:** E03 re-runs the System and stores `iloc[-1]` edges; E04 trades to `round(edge)` (trade-to-edge hard-coded, DV3); E06 overrides and limits apply downstream with no backtest equivalent. VERIFIED.
+- E05 (order stacks, algos, IB broker) is **UNVERIFIED**: Phase 19 was SKIPPED — RESOURCE PRIORITY (§20).
+- An alternative accounts stage, the order simulator (UD5, §10.4), replaces fill inference with a per-row order/fill loop. It is not an inventory row (DISC-3). VERIFIED (code); accounting effect TESTED (EXP-11, §16.8).
+
+**6. What survives complete replacement of the signal when the replacement satisfies the Signal Contract (Case A)?**
+- Per the CSV (`survives_if_contract_met`): **40 of 41 rows = Y**. The one exception is **A03 = N**: the provided rules are the signal being replaced, so they become inapplicable rather than broken.
+- Evidence status: `swap_evidence` is INFERRED for every row except A06 (TESTED) and A07 (HYPOTHESIS). The finding is counterfactual (spec §13) and was not tested by running a replacement signal.
+- Survival means the mechanism still runs as designed. It says nothing about whether parameter values fit the new signal; those must be re-fixed or re-estimated (§5 Case A).
+
+**7. What fails or changes when the replacement violates the Signal Contract (Case B)?**
+Per the CSV (`survives_if_contract_violated`):
+- **Y (14):** C01, C02, C04, C05, D01, R02, R08, P02, P04, P07, P08, E02, E05, E06.
+- **PARTIAL (25):** C03, A01, A02, A04–A08, R01, R03–R07, R09–R11, P01, P03, P05, P06, P09, E01, E03, E04.
+- **N (2):** SC (violated by definition) and A03 (inapplicable).
+
+Why the partial set changes (§5 Case B):
+- exact zeros are erased and the prior forecast is held through intended-flat periods (SC9/SC10, TESTED by EXP-01);
+- whole-history, stateless evaluation gives no feedback of position or fills to the rule (SC4/SC5, VERIFIED);
+- sparse signals are scaled on active bars only, and turnover and costs are understated on held series (INFERRED);
+- there is no channel for entry/exit events, stops or targets (SC14, VERIFIED).
+
+`swap_evidence` as in item 6.
+
+**8. What is daily / position-trading dependent?**
+- Rows labelled **DAILY-DEPENDENT** for intraday (§24.6, CSV): **A03** (day-denominated rule parameters), **E01** (single fill at the next daily close) and **E03** (whole-history re-run per decision). VERIFIED.
+- Daily conventions that are *parametric* rather than structural run through most other rows: business-day resampling of prices, weights and turnover (SC12); √256 annualisation; the 35-day / 10-year vol windows; the buffer width as a daily-vol quantity; the 256-day turnover annualisation. These sit in the 27 POTENTIALLY PORTABLE — REQUIRES REDESIGN rows. VERIFIED (§13.6; §10.6; §22.C).
+- Two structural gaps are not inventory rows (§22.B): **no market-impact or cost-curve model** (absence UNVERIFIED beyond the searched terms) and **no stop/target/intrabar-exit channel** (SC14, VERIFIED).
+
+**9. Which principles are conceptually portable to swing futures?**
+- **39 of 41 rows** are CONCEPTUALLY PORTABLE — UNTESTED at swing (§24.5; CSV). The general reason: the audited default already decides once per day on daily bars and fills at the next daily close, which is the swing cadence as defined in spec §5 (§21.1, VERIFIED).
+- **UNTESTED** is load-bearing: no swing-specific run was made in this audit.
+- **P09 and E05** are TRANSFER NOT JUSTIFIED because the audit did not examine them deeply enough (§21.3). That is a statement about audit depth, not evidence against transfer.
+
+**10. Which principles are potentially portable to intraday futures?**
+- **CONCEPTUALLY PORTABLE — UNTESTED (8):** C01, C02, C04, R08, P04, P07, P08, E06. Their logic has no embedded bar-frequency constant (§22.A, VERIFIED).
+- **POTENTIALLY PORTABLE — REQUIRES REDESIGN (27; see item 11).** The underlying principles may transfer: size inversely to volatility, normalise and blend forecasts, diversify by correlation, trade only outside a threshold, charge a cost per fill. Their implementations would not transfer as written (§22.C). HYPOTHESIS for the principle; VERIFIED for the implementation constraints.
+
+**11. Which implementations require redesign for intraday frequency?**
+- **The 27 rows labelled POTENTIALLY PORTABLE — REQUIRES REDESIGN:** SC, C03, C05, D01, A01, A02, A04, A05, A06, A08, R01–R07, R09–R11, P01–P03, P05, P06, E02, E04 (§24.6; CSV).
+- The specific redesigns are named in §22.C and the §25 "Evidence Needed" column. Examples:
+  - a turnover measure not resampled to `1B` (R09, VERIFIED);
+  - a pooling method that survives high-frequency data, since the stacking function carries an in-source warning (R03/R04/R07, DOCUMENTED);
+  - re-derived annualisation and vol windows (P01/R02, VERIFIED);
+  - an exit-aware combination step (A06, TESTED break);
+  - a size-, liquidity- and time-of-day-aware cost model (E02, VERIFIED).
+- No replacement is designed here (spec §45).
+
+**12. Which assumptions are most important?**
+The criterion is **breadth of dependence**: how many inventory rows change status if the assumption fails, per §5 Case B, §22 and §25, and whether the effect has been TESTED. The list is unordered. The criterion identifies these assumptions, and no importance order among them is claimed.
+- **Zero means missing, then forward-filled** (SC9/SC10). It reaches every forecast-processing row, and its effect is TESTED (EXP-01).
+- **Whole-history, stateless, vectorised evaluation** (SC4/SC5). It underlies the cache, rules, production runner and the absence of state feedback. VERIFIED.
+- **Business-day frequency in all calibration statistics** (SC12). It reaches sizing, turnover, costs, weights and combination. VERIFIED.
+- **Forecasts, not orders or events** (SC14). There is no entry/exit, stop or target channel anywhere downstream. VERIFIED.
+- **A single price per bar, with a fill at the next bar** (E01; §13.6 item 4). It defines backtest execution. TESTED (Phase 16 trace).
+- **Cost linearity and a constant spread per instrument** (E02; §13.6 items 2–3). VERIFIED formula; absence of impact modelling UNVERIFIED beyond the searched terms.
+- **End-of-sample anchors in cost and estimation quantities** (PF-2 by default; PF-1, PF-3/PF-4 and PF-11 when estimation is on). TESTED (§16).
+- **Static, current instrument metadata applied to all history, and research roll dates chosen by data availability** (§11.8–§11.10). VERIFIED mechanism; POSSIBLE ISSUE.
+
+**13. Which assumptions should not be transferred blindly?**
+Each of these is recorded with evidence showing the assumption holds only under conditions a new setting may not meet. The list is unordered.
+- **Zero = missing.** A replacement signal that uses 0 for flat is silently held at its previous value. TESTED (EXP-01).
+- **Business-day constants:** √256, `1B` resampling, 256-day turnover annualisation, a 35-day vol span, 0.1 × average position buffers. Correct only for a daily decision index. VERIFIED.
+- **Pooled correlation by stacking with microsecond offsets.** The source warns it will not work with high-frequency data. DOCUMENTED (in-source).
+- **Next-close single-price fills.** They rule out partial fills, queue position, latency and intrabar sequencing. VERIFIED.
+- **The order simulator's gross P&L at bar prices.** For the provided hourly limit-order example, +31,516 USD against −129,875 USD at fill prices. TESTED (EXP-11). It is not look-ahead, but it is not a validated intraday fill model either.
+- **Linear, size-independent costs with one spread per instrument for all history.** VERIFIED.
+- **End-anchored quantities** (PF-2 by default; PF-1/PF-3/PF-4 with estimation). TESTED.
+- **Research roll dating (R1) versus live roll decisions (R2).** Different mechanisms, not compared on data. INFERRED.
+- **Shipped fixed parameters whose derivation is not in the repository** (N9). UNVERIFIED.
+- **Capital scaling that differs between backtest (fixed multiplier) and live (current capital as notional).** VERIFIED (O5/P8-O5).
+- **Trade-to-edge hard-coded live, while the backtest honours the config.** VERIFIED (DV3).
+- **Anything in E05 or P09.** Not examined deeply enough to transfer (TRANSFER NOT JUSTIFIED, audit depth).
+
+### 26.2 Framework layer summary (spec §49)
+
+Column sources:
+- **Problem Solved** and **Failure Mode Prevented** come from the Tier 1 cards (§6.4) where a card exists. For Tier 2 rows without a card they come from the §6.3 notes and are marked *(INFERRED from note)*; "—" means none is recorded.
+- **Alpha-Specific?** is the CSV `alpha_specific` field.
+- **Portfolio-Level?** records whether the component operates across instruments (Y) or per instrument (N). "infra" means cross-layer infrastructure; "both" means it has per-instrument and portfolio variants.
+- **Transferable Principle?** gives the CSV swing / intraday labels. These are classifications, not recommendations (spec §43).
+- **Evidence** is the CSV `impl_evidence` plus the report section.
+
+Label abbreviations in this table: CP-U = CONCEPTUALLY PORTABLE — UNTESTED; PP-RR = POTENTIALLY PORTABLE — REQUIRES REDESIGN; DD = DAILY-DEPENDENT; TNJ = TRANSFER NOT JUSTIFIED.
+
+| Framework Layer | Problem Solved | Failure Mode Prevented | Alpha-Specific? | Portfolio-Level? | Transferable Principle? | Evidence |
+|---|---|---|---|---|---|---|
+| Signal Contract (SC) | Defines what a rule must return for downstream stages to work as designed | — (an interface, not a mechanism) | N | infra | Swing CP-U; intraday PP-RR | VERIFIED; §5 |
+| System + Stage (C01, C02) | A uniform container binding stages, data and config, with a shared namespace and one cache | Ad-hoc wiring | N | infra | Swing CP-U; intraday CP-U | VERIFIED; Card 2 |
+| Cache (C03) | Avoids recomputing whole-history series and estimates | Repeated slow estimation; inconsistent recomputation within one System | N | infra | Swing CP-U; intraday PP-RR | VERIFIED; Card 1 |
+| Config (C04) | Parameter store with layered defaults | — | N | infra | Swing CP-U; intraday CP-U | INFERRED; §6.3, §14 |
+| SimData (C05) | Supplies price, vol, carry and FX series to stages *(INFERRED from note)* | — | N | infra | Swing CP-U; intraday PP-RR | VERIFIED; §6.3, §11.1 |
+| Price / roll data (D01) | Continuous back-adjusted series, multiple prices and roll calendars *(INFERRED from note)* | — | N | infra | Swing CP-U; intraday PP-RR | VERIFIED; §11 |
+| Trading-rule interface (A01, A02) | Any function over system data becomes a named rule variation producing a raw forecast | Rule-specific plumbing in downstream stages | N | N | Swing CP-U; intraday PP-RR | VERIFIED; Card 3 |
+| Provided rules (A03) | Trend, carry, breakout and other signal generators *(INFERRED from note)* | — | **Y** | N | Swing CP-U (alpha; out of scope, §21.3); intraday DD | VERIFIED; §6.3 |
+| Forecast scaling + scalar estimation (A04, R01) | A common scale across rules (average \|10\|) | Rules with different natural units dominating combination or sizing | N | N | Swing CP-U; intraday PP-RR (both) | VERIFIED; Card 4 |
+| Forecast cap (A05) | Limits the influence of extreme forecasts | Outsized positions from outliers or scalar mis-estimation | N | N | Swing CP-U; intraday PP-RR | VERIFIED; Card 5 |
+| Forecast combination (A06) | Blends rule variations into one instrument forecast | Reliance on a single rule; weight jumps; weight on rules without history | N | N | Swing CP-U; intraday PP-RR | VERIFIED; Card 6 |
+| Forecast mapping (A07) | Optional non-linear response curve on the combined forecast *(INFERRED from note)* | — | N | N | Swing CP-U; intraday TNJ | INFERRED; §6.3 |
+| FDM application + estimation (A08, R04, R03) | Restores average \|forecast\| lost to averaging imperfectly correlated forecasts | Systematic under-sizing from diversification across rules | N | N | Swing CP-U; intraday PP-RR (all three) | A08 VERIFIED; R03/R04 INFERRED; Card 8 |
+| Volatility estimation (R02) | Price-difference vol for rule normalisation and sizing | Positions that ignore changing risk; jumps from short-window vol; division by zero | N | N | Swing CP-U; intraday PP-RR | VERIFIED; Card 7 |
+| Forecast-weight optimisation (R05) + P&L proxy (R10) | Fits forecast weights on forecast P&L *(INFERRED from note)* | — | N | N | Swing CP-U; intraday PP-RR (both) | R05 INFERRED; R10 VERIFIED; §6.3, §12 |
+| Fitting dates (R08) | Builds fit and apply windows with `fit_end = period_start` *(INFERRED from note)* | Using data from the period an estimate is applied to *(INFERRED from note)* | N | infra | Swing CP-U; intraday CP-U | VERIFIED; §6.3 |
+| Turnover / SR cost + speed limit (R09, R11) | Excludes rule variations whose expected cost in SR units exceeds a ceiling | Allocating to fast rules whose costs consume their expected return | N | N | Swing CP-U; intraday PP-RR (both) | VERIFIED; Card 14 |
+| Position sizing (P01) | Converts a forecast into contracts so forecast 10 = the annual cash-vol target for the subsystem | Positions whose risk varies with instrument vol, contract size or FX | N | N | Swing CP-U; intraday PP-RR | VERIFIED; Card 9 |
+| Instrument weights + IDM (P02, P03, R06, R07) | Allocates the risk budget across instruments; restores the portfolio vol target lost to diversification | Concentration; portfolio vol below target | N | Y | Swing CP-U; intraday PP-RR (all four) | P02/P03 VERIFIED; R06/R07 INFERRED; Cards 10–11 |
+| Risk overlay (P04) | Portfolio-wide multiplier in [0, 1] when estimated risk, shocked risk, absolute risk or leverage exceed limits | "Expected risk that is too high; weird correlation shocks combined with extreme positions; jumpy volatility" (docstring) | N | Y | Swing CP-U; intraday CP-U | VERIFIED (OFF by default; NOT_DOCUMENTED); Card 15 |
+| Buffering (P05, P06) | A no-trade zone around the optimal position | Trading on small changes in the optimal position (cost drag) | N | both | Swing CP-U; intraday PP-RR (both) | VERIFIED; Card 12 |
+| Capital multiplier (P07) | Scales notional positions to actual positions *(INFERRED from note)* | — | N | Y | Swing CP-U; intraday CP-U | VERIFIED; §6.3, §8 |
+| Long-only (P08) | Sets negative positions to 0 for listed instruments *(INFERRED from note)* | — | N | N | Swing CP-U; intraday CP-U | VERIFIED; §6.3 |
+| Dynamic optimisation (P09) | Integer-contract portfolio construction as an alternative to classic *(INFERRED from note)* | — | N | Y | Swing TNJ; intraday TNJ | VERIFIED (core only; PARTIALLY AUDITED); §12.4 |
+| Backtest P&L (E01) | Simulated fills and returns from a position series *(INFERRED from note)* | — | N | N | Swing CP-U; intraday DD | VERIFIED; §6.3, §17 |
+| Cost model (E02) | Deducts trading and roll costs; expresses costs in SR units | Overstated net performance; selecting rules too expensive to trade | N | N | Swing CP-U; intraday PP-RR | VERIFIED; Card 13 |
+| Production runner + order generation (E03, E04) | Turns the latest backtest output into position bands, then orders given actual positions | Trading within the buffer; research/live calculation divergence | N | N | Swing CP-U; intraday E03 DD, E04 PP-RR | VERIFIED; Card 16 |
+| Order stacks / broker (E05) | Routes and manages live orders *(INFERRED from note)* | — | N | infra | Swing TNJ; intraday TNJ | **UNVERIFIED**; §6.3, §20 |
+| Overrides / limits (E06) | Post-generation position and trade caps, and discretionary overrides *(INFERRED from note)* | — | N | both | Swing CP-U; intraday CP-U | VERIFIED; §6.3, §7.10 |
+
+Row coverage: the 29 table rows cover all 41 CSV rows (SC; C01–C05; D01; A01–A08; R01–R11; P01–P09; E01–E06). Where rows are grouped, every grouped ID carries the same labels for that column except where the cell says otherwise (E03/E04).
+
+### 26.3 Differences between the CSV and earlier report text (recorded, not edited)
+
+**The CSV is canonical for component fields** (spec §32). Three places in earlier text differ from it. None was edited here.
+
+- **P09 under Case A.** §5's Case A table (Phase 4) and §24.1 say P09 is UNKNOWN. The CSV has `survives_if_contract_met = Y`, `swap_evidence = INFERRED`, set in Phases 11–12 after the P09 core was read (Executive Summary 20; §13.9). §24.1 also says "two components UNKNOWN pending audit depth (P09)" but names only one.
+- **§24.1's Case B recap does not match the CSV:**
+  - it lists P03 among components surviving unchanged, but the CSV has `PARTIAL`;
+  - it includes all of R01–R11 in the "partially" group, but the CSV has R02 and R08 as `Y`;
+  - it omits P04 and E06, which the CSV has as `Y`.
+- **§24.1's count "40 of 41 components"** is correct against `alpha_specific` (40 N, 1 Y).
+
+Item 7 above uses the CSV values. These differences are raised for operator review, like the earlier DISC items.
 
 ## 27. Open Questions / Evidence Gaps / Stage-2 Comparison Questions
-Evidence gaps G1–G8 and unresolved issues U1–U7 are listed in `audit_progress.md` (Phase 7 gap updates: §8.5). Comparison questions: NOT YET AUDITED (P2).
+
+**Phase 26 (spec §50).** This section has three parts:
+- 27.1 classifies every unresolved evidence item recorded in the audit into the six spec §50 categories;
+- 27.2 points to the running issue lists;
+- 27.3 lists neutral questions that could later be asked of another futures research architecture, generated from the inventory.
+
+It guesses nothing and answers none of the 27.3 questions. The documentation / implementation divergence register below is unchanged.
+
+### 27.1 Evidence gaps, classified (spec §50)
+
+Each item is listed once, under the category that best describes *why* it is unresolved. "Source" is where the audit records it.
+
+| Category | Item | What is unresolved | Source |
+|---|---|---|---|
+| **Unavailable source** | Shipped historical CSV construction | How the shipped multiple and adjusted prices were built before the shipped roll calendars begin. Described as author-built; the method is outside the repository | §11.7; §11.10(d); PF-8(d) |
+| Unavailable source | Shipped fixed-parameter provenance (N9) | Method and data period behind the fixed parameters in `futuresconfig.yaml` | §15 N9; G12 |
+| **Unavailable data** | Availability-based roll dating (R1) effect size | Re-building calendars needs raw per-contract prices, which are not shipped | §11.12; G11 (Phase 10) |
+| **Unavailable dependency** | Live order stacks, algos, IB client (E05) at run time | Needs an IB gateway and a production database; excluded by the safety rules (spec §10), and not read statically either (Phase 19 skipped) | §6.3 E05; §20; G4 |
+| Unavailable dependency | Live roll-status decision (R2) at run time | Needs production price and volume data; the trigger internals were also not read | §11.2 |
+| Unavailable dependency | Production scheduling behaviour (G8) | The order of `run_systems` vs `run_strategy_order_generator`, and any staleness check on stored positions; needs the production scheduler and config | G8; PF-10 |
+| Unavailable dependency | Production margin and capital data | What `sysdata/production/margin.py` / `mongo_margin.py` store, and how live capital is computed (listing only) | §23.1 |
+| **Untestable implementation** | PF-12(b) ex-post universe selection | Exclusion lists written with current knowledge are applied to all history. A truncation test cannot isolate this; it is not a data path | §16.9 |
+| Untestable implementation | N10 protected / stale cache | A user-workflow property, not a data path | §16.9 |
+| **Insufficient evidence** | Phase 19 scope | Research-to-live connection, broker integration, reconciliation, account state, persistence, restart, monitoring, logging, error handling: **SKIPPED — RESOURCE PRIORITY**. A known gap, not NO ISSUE IDENTIFIED | §20 |
+| Insufficient evidence | P09 remaining internals | Constraint set-up, data preparation, accounts and live-strategy internals not read (PARTIALLY AUDITED — RESOURCE PRIORITY) | §12.4; U4 |
+| Insufficient evidence | A07 forecast mapping | The Gaussian-forecast assumption was never tested against actual forecast distributions; mapping parameters not read | §6.3 A07; §22.D |
+| Insufficient evidence | Market impact / cost curve absence | The absence rests on name-based searches; UNVERIFIED beyond the searched terms | §13.2; G10 |
+| Insufficient evidence | Live commission feedback | No automatic feedback from broker commissions into configured costs was observed; limited search | §13.5; G10 |
+| Insufficient evidence | Margin / financing absence in the backtest | Searched `systems/` for `margin` and related terms only | §10.2 |
+| Insufficient evidence | Config / code versioning absence | Searched a fixed term list only | §14.1 |
+| Insufficient evidence | Parquet / Mongo storage paths | Not read | §11.11 |
+| Insufficient evidence | Findings classified but not run in Phase 15 | PF-2 via estimated weights / IDM; PF-6; PF-7; PF-13; PF-14 effect size; N8; the greedy `False` maximum (G7 candidate) | §16.9 |
+| Insufficient evidence | Metadata-edit effect | The effect on rounding, per-block commissions and live execution is formula-level INFERRED only | §11.8; §11.12 |
+| Insufficient evidence | Timing trace coverage | Three dates, one instrument, daily default only. Hourly systems, order simulator, compounding, P09 and the warm-up boundary were not traced | §17.6 |
+| Insufficient evidence | Hourly data in the bundled CSVs | Whether the bundled data contains intraday rows for the hourly path was not checked as a general property | G11 (Phase 9) |
+| Insufficient evidence | Documentation coverage of production | The production docs were not read (Phase 19 skipped), so live-side documentation divergences are unassessed | Card 16; §20 |
+| Insufficient evidence | Order simulator as a component | Not an inventory row (DISC-3). Its own accounting (O-P9-1) is TESTED only for the provided hourly limit-order example | §10.4; §16.8 |
+| **Unresolved code ambiguity** | O-P9-1 | Whether gross P&L at bar prices rather than fill prices is intended; not documented | §10.4; §16.8 |
+| Unresolved code ambiguity | O-P9-2 | Why the limit-fill slippage flag is `False` for buys and `True` for sells; intent not documented | §10.4 |
+| Unresolved code ambiguity | O-P9-3 | Hourly use of a rule docstring-labelled for daily data; lookbacks then count hours | §10.4 |
+| Unresolved code ambiguity | UD3 | Downstream numeric treatment of `minimum_position_limit` returning `False` | §12.3; register UD3 |
+| Unresolved code ambiguity | §3 (v) | The instrument-code match takes the last matching positional argument, while the docstring says the first | §3 |
+| Unresolved code ambiguity | SC5 edge | Any stage method could in principle be named as rule data, which could feed state back into rules (INFERRED) | §5 SC5 |
+| Unresolved code ambiguity | R1 vs R2 roll consistency | Research and live roll mechanisms differ and were not compared on data (INFERRED) | §11.2 |
+| Unresolved code ambiguity | CSV vs report text on P09 Case A and the §24.1 Case B recap | Recorded in §26.3 for operator review | §26.3 |
+
+Not in this table: operational items that are not evidence about pysystemtrade. U2, usage/cost not recorded, is kept in `audit_progress.md`.
+
+### 27.2 Running issue lists
+
+Unresolved issues U1–U7, evidence gaps G1–G12 and limitation L-P15-1 are maintained in `audit_progress.md` and are authoritative there. 27.1 classifies their content; it does not replace those lists.
+
+### 27.3 Future comparison questions (neutral; not answered)
+
+These questions come from the verified inventory (spec §50). They are for a later comparison against another futures research architecture. No other system was inspected, and nothing here implies an expected answer or a preference.
+
+**27.3.1 Standard questions, to ask for every inventory component.** For each of SC, C01–C05, D01, A01–A08, R01–R11, P01–P09 and E01–E06 (41 rows):
+1. Does the architecture have an equivalent of this component?
+2. Where does it live (module, layer, process)?
+3. Is it separated from alpha generation?
+4. Is it fixed, estimated or optimised, and how is it estimated?
+5. When does the estimate become available relative to the data it is applied to?
+6. Is its behaviour documented, and does the documentation match the implementation?
+7. Is it covered by tests that would detect a change in its output?
+
+**27.3.2 Component-specific questions, from verified findings.**
+
+*Signal interface (SC, A01, A02)*
+- What object and type must a signal return, and is that stated in documentation?
+- How is an exact zero signal value interpreted: as flat, missing or held?
+- Is a signal evaluated over the whole history at once or bar by bar, and can it receive its own position, fills or entry price?
+- Is there a channel for entry/exit events, stops, targets or order types, separate from a continuous forecast?
+- At what frequency are signals assumed to arrive, and where is that assumption encoded?
+
+*Infrastructure (C01–C05, D01)*
+- How are calculation stages composed, and are their dependencies declared or implicit?
+- What is cached, what is the cache key, and do config or data changes invalidate it?
+- How are configuration layers merged, and can a null value override a default?
+- Are configuration and code versions recorded with each result?
+- How are continuous futures series constructed (method of back-adjustment), and do later rolls change earlier values?
+- How are roll dates chosen for research data, and is that the same mechanism as live rolls?
+- Is instrument metadata (contract size, costs) versioned by date or applied to all history?
+
+*Forecast processing (A04–A08, R01, R03–R05)*
+- How are signals from different rules put on a common scale, and on which observations is the scale estimated?
+- Is the scale estimate backfilled before enough data exists?
+- How are missing values handled when signals are combined?
+- How are combination weights estimated, on what return proxy, and at what refit frequency?
+- How is diversification across signals measured, and is there a cap on the resulting multiplier?
+- Is any non-linear mapping applied, and what distributional assumption does it make?
+
+*Estimation framework (R02, R06–R11)*
+- How is volatility estimated (windows, blending, floors), and in what time unit are the windows expressed?
+- How are correlations estimated, and are instruments pooled? If pooled, how are rows aligned?
+- Do fit windows end strictly before the period an estimate is applied to?
+- Is the refit calendar anchored to the sample start, the sample end or fixed dates?
+- How is turnover measured, and on what resampling?
+- Are costs used in rule selection or weighting, and are any cost inputs taken from the end of the sample?
+
+*Portfolio and risk (P01–P09)*
+- How is a signal converted into a position (risk target, annualisation convention)?
+- How are instrument weights and a cross-instrument diversification multiplier set?
+- Is there a portfolio-level risk or leverage overlay, and is it on by default?
+- Is there a no-trade buffer, how is its width set, and does the width depend on costs?
+- How is capital scaled over time (fixed or compounding), and is the timing of capital consistent with positions?
+- How are integer contract constraints handled for small accounts?
+
+*Execution (E01–E06)*
+- How are backtest fills simulated: at which price, with what delay, and with partial fills?
+- How are trading costs modelled (spread, commission, impact), and are they size- or time-dependent?
+- How are roll costs modelled: on actual roll dates or on modelled events?
+- How does the live process derive today's target from research code, and is the stored target checked for age?
+- Does live order generation follow the same buffer rule as the backtest?
+- What overrides, position limits and trade limits exist, and do they have backtest equivalents?
+- How are orders routed, filled, reconciled and recovered after failure?
+- Is there an alternative event-driven or order-level simulator, and how does it value fills?
+
+*Validation (cross-cutting, from §16–§19)*
+- Which look-ahead or end-of-sample dependencies does the architecture's own test suite detect?
+- Are end-to-end tests asserting outputs, or only that code runs?
+- What safeguards exist against data snooping, repeated experimentation and multiple testing?
 
 ### Documentation / implementation divergence register (running)
 
