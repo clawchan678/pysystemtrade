@@ -2231,8 +2231,244 @@ All five are detectable only by ad hoc experiments of the Phase 15 kind (EXP-06�
 
 Operator decision (session 8, P1B close) under spec §40's resource-priority allowance: Phase 19 is optional and first to cut. No Phase 19 inspection was done. Earlier phases' entry-level live facts remain as recorded (§2; §9.5; §13.5 research/live table; Executive Summary items 14–15; PF-9/PF-10; G8; E05 UNVERIFIED) and are not extended here.
 
-## 21–26. Transfer analysis, operational readiness, inventory views, matrix, synthesis
-NOT YET AUDITED (P2). No transfer conclusions are drawn before P2.
+## 21. Swing Transfer Analysis (Phase 20)
+
+**Definitions in force (spec §5).** Swing = multi-day holding periods, decisions made no more frequently than once per trading day, using daily-or-slower decision data; execution may use finer data.
+
+### 21.1 General finding
+
+The audited default configuration already operates at exactly this cadence: forecasts are generated once per day from daily bars (SC4, SC12 — VERIFIED), positions are decided at most once per day, and execution fills at the next daily close (SC11, Phase 16 trace — VERIFIED). Swing trading, as defined for this audit, is not a different frequency from what pysystemtrade already does by default — it is what pysystemtrade already does by default. Consequently, for the great majority of components, the swing-transfer question reduces to "does anything about this component depend on a frequency *faster* than daily?" — and the answer is almost uniformly no. This is reflected in the table below: most rows carry **CONCEPTUALLY PORTABLE — UNTESTED** rather than a stronger label, because "untested" is doing real work here — no swing-specific empirical run was performed in this audit (P0/P1 tested causality and timing, not swing performance), so the correct claim is "the mechanism does not appear frequency-blocked for swing," not "swing use is validated."
+
+Three categories of exception exist and are treated separately below the table: (a) components whose *own* audit depth was insufficient to respond responsibly (P09, E05); (b) the alpha-specific components themselves (A03, A07), which sit outside the "framework minus alpha" question this phase asks; (c) none of the remaining components showed a swing-blocking assumption in the evidence gathered.
+
+### 21.2 Component-by-component table
+
+Columns: Principle (what the component is *for*, independent of implementation) · Implementation (brief) · Assumption tested against swing cadence · Evidence · Transfer status. "Assumption survives" is stated inline in the Assumption column rather than as a separate column, per spec §44.
+
+| Component | Principle | Implementation (brief) | Assumption vs. swing cadence | Evidence | Transfer status |
+| --- | --- | --- | --- | --- | --- |
+| SC — Signal Contract | A forecast is a signed, continuous, daily-or-slower series | SC1–SC16 (§5) | A daily-or-slower signal is exactly what the contract already specifies (SC12) | VERIFIED (§5) | CONCEPTUALLY PORTABLE — UNTESTED |
+| C01 System / C02 Stage | Compose a pipeline of named, cacheable calculation stages | `System`/`SystemStage` (`systems/basesystem.py`, `systems/stage.py`) | No reference to bar frequency anywhere in the container pattern | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| C03 Cache | Memoise whole-history pure-function results | `systemCache` decorators (`systems/system_cache.py`) | Whole-history recompute per call is cheap at daily-bar row counts (thousands of rows) | VERIFIED (row-count reasoning) | CONCEPTUALLY PORTABLE — UNTESTED |
+| C04 Config | Parameter store, independent of frequency | `Config`/`defaults.yaml` | Genuinely frequency-agnostic; only the *values* would differ | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| C05 SimData | Supply price/vol/carry data to stages | `simData`/`futures_sim_data.py` | Default path already resamples to daily (`1B`); swing needs nothing finer | INFERRED | CONCEPTUALLY PORTABLE — UNTESTED |
+| D01 Price/roll data | Continuous, back-adjusted futures series | adjusted/multiple prices, roll calendars | Built and validated at daily granularity, which is swing's native granularity | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| A01/A02 TradingRule / Rules stage | Generic call shape for any signal | `f(*data, **kwargs) -> pd.Series` (SC1–SC5) | Vectorised whole-history evaluation is what a daily swing rule already looks like | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| A03 Provided rules | Trend/carry/breakout signal generation | EWMAC/carry/breakout in `systems/provided/rules/*.py` | **Out of scope as "framework machinery"** — this is the alpha being replaced under the audit's central question. As shipped, parameters are explicitly day-denominated (`ewmac.py`: *"Assumes that 'price' is daily data"*, *"Lookback for fast in days"* — VERIFIED by direct reading). At swing cadence this is already the native unit, so no redesign is implied | VERIFIED (docstring, confirmed this session) | CONCEPTUALLY PORTABLE — UNTESTED *(caveat: alpha-specific, see §21.3)* |
+| A04 Forecast scaling | Normalise forecast magnitude to a fixed average | `get_scaled_forecast`; expanding-mean scalar or fixed | Mean-abs scaling is meaningful for a continuous daily signal (SC7) | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| A05 Forecast cap | Bound extreme conviction | `clip(±20)` | A daily signal's tails are what the cap was calibrated against | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| A06 Forecast combination | Blend multiple signals into one | weighted sum after ffill, resampled to `1B` (`forecast_combine.py:258-260`, comment: *"Remap to business day frequency so the smoothing makes sense"* — VERIFIED, confirmed this session) | The `1B` resample is a no-op at daily cadence — swing decisions already land on business days | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| A07 Forecast mapping | Non-linear response curve on the forecast | `map_forecast_value` | Assumes a roughly Gaussian daily forecast distribution (documented, not verified statistically here) | HYPOTHESIS (unchanged from §5 SC8) | CONCEPTUALLY PORTABLE — UNTESTED |
+| A08 FDM application | Scale up combined forecast for imperfect correlation | scalar multiply, capped 2.5 | Correlation-based risk-shrinkage logic has no frequency term itself | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R01 Forecast-scalar estimation | Estimate the scaling constant from history | expanding mean of cross-sectional median \|forecast\| | Expanding-window statistics are frequency-general; PF-1's backfill effect is confined to pooled warm-up, not a frequency effect | TESTED (PF-1, Phase 15) | CONCEPTUALLY PORTABLE — UNTESTED |
+| R02 Vol estimation | Estimate risk per unit position | 35-day EWM blended 30% with a 10-year slow vol | Both windows are denominated in calendar days; at swing (daily decisions) they apply exactly as designed | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R03 Forecast-correlation estimation | Estimate how forecasts co-move | weekly-resampled, pooled/stacked correlation | Weekly resampling of a daily signal is a design choice already compatible with swing | INFERRED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R04 FDM estimation | Calibrate the diversification multiplier | `1/√(wᵀCw)`, capped 2.5, EWM125 | Depends on R03; no additional frequency assumption | INFERRED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R05/R06 Weight optimisation | Fit forecast/instrument weights | Markowitz variants + handcraft, refit periodically (R08) | 365-day refit periods match a swing system's natural recalibration cadence | INFERRED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R07 Instrument-corr/IDM estimation | Estimate diversification across instruments | weekly correlation of subsystem returns | Same reasoning as R03 | INFERRED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R08 Fitting dates | Generate refit period boundaries | expanding/rolling/in-sample date windows | Pure calendar arithmetic; no bar-frequency reference at all | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R09 Turnover/SR cost | Estimate trading activity and its cost | `\|Δ(forecast/10)\|` on a `.resample("1B")`, ×`BUSINESS_DAYS_IN_YEAR` (=256, `syscore/dateutils.py:26` — VERIFIED, confirmed this session) | `1B` resample of a daily decision series changes nothing | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R10 Forecast P&L proxy | Approximate the P&L a forecast alone would earn | forecast/10 × average position, delayed fill | Same daily assumptions as E01, already swing-native | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| R11 Cost-ceiling speed limit | Drop rules whose estimated cost is too high | SR-cost threshold (defaults off: 999/9999) | Depends on R09; inherits its swing-compatibility | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P01 Position sizing | Size positions to a risk target | `capital × %target/√256 / (point value × vol × fx) × f/10` | √256 annualisation is a daily-vol convention already appropriate at swing cadence | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P02 Instrument-weight application | Allocate risk across instruments | scalar multiply, EWM125 smoothing | Smoothing window denominated in daily periods, swing-native | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P03 IDM application | Scale up for cross-instrument diversification | scalar multiply | Depends on R07; no independent frequency assumption | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P04 Risk overlay | Portfolio-level leverage/risk scalar | scalar in \[0,1\] on positions, off by default | Generic risk-scalar concept; **evidence is thinner here** — undocumented (`doc_status = NOT_DOCUMENTED`) and not deeply exercised beyond existence | VERIFIED (existence/mechanism only) | CONCEPTUALLY PORTABLE — UNTESTED |
+| P05/P06 Buffering | Avoid over-trading around a noisy target | width = 0.1 × \|avg position at forecast 10\|; path-dependent apply loop | A daily-vol-scaled buffer width is exactly what a swing system's own target already is | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P07 Capital multiplier | Scale positions to available capital | fixed or compounding | Frequency-agnostic arithmetic | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P08 Long-only constraint | Zero out negative positions where required | per-instrument floor at 0 | Frequency-agnostic constraint | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| P09 Dynamic optimisation | Alternative integer-position construction | greedy per-date search vs. classic notional | **Own internals were only partially read (§12.4); deep review was explicitly deferred as PARTIALLY AUDITED — RESOURCE PRIORITY** | UNVERIFIED (depth) | TRANSFER NOT JUSTIFIED — insufficient audit depth |
+| E01 Backtest P&L | Simulate fills and returns | next-close fill, `delayfill` shift(1) | This *is* the swing execution model as defined (decide at close t, fill close t+1, hold days) | VERIFIED (Phase 16 trace) | CONCEPTUALLY PORTABLE — UNTESTED |
+| E02 Cost model | Charge trading costs | linear per-fill cost + roll pseudo-fills + end-of-sample deflator | A swing system trades occasionally; a per-fill linear cost model is the right granularity | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| E03 Production runner | Re-run the system daily, act on the last row | re-run full `System`, read `buffers.iloc[-1]` | Exactly a swing production loop by construction | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| E04 Order generation | Trade toward the target when outside the buffer | round to buffer edge | Daily decision → daily order generation, swing-native | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+| E05 Order stacks / broker | Route and manage live orders | `sysexecution`/`sysbrokers` | **Not deeply audited — Phase 19 (the phase that would cover this) was explicitly SKIPPED — RESOURCE PRIORITY** | UNVERIFIED | TRANSFER NOT JUSTIFIED — insufficient evidence |
+| E06 Overrides/limits | Apply position/trade caps after generation | `override`/`position_limits`/`trade_limits` | Frequency-agnostic control layer | VERIFIED | CONCEPTUALLY PORTABLE — UNTESTED |
+
+### 21.3 Exceptions requiring their own reasoning
+
+- **A03 (provided rules) and A07 (forecast mapping)** are alpha-specific or thin-evidence items sitting outside the main "framework minus alpha" question. A03's day-denominated parameters need no change at swing cadence (evidence: VERIFIED docstring, confirmed this session), but note this is a statement about *parameter units matching*, not an endorsement of the rules themselves — the master spec's Central Research Question treats A03 as the thing being replaced, not the thing being transferred. A07 remains HYPOTHESIS-level (§5 SC8) because the Gaussian-forecast assumption behind the mapping was never statistically tested against real forecast distributions in this audit.
+- **P09 and E05** are labelled TRANSFER NOT JUSTIFIED for a reason distinct from every other row: it is not that evidence points against transfer, but that the audit itself did not go deep enough to respond responsibly. This is the correct application of the label's definition (spec §43: "available evidence is insufficient to justify transfer") and should not be read as "swing transfer of these components fails" — it should be read as "this audit cannot tell you."
+
+---
+
+## 22. Intraday Transfer Analysis (Phase 21)
+
+**Definitions in force (spec §5).** Intraday = positions normally opened and closed within a trading session, decisions made on sub-daily data (1–5 minute bars or ticks for liquid futures such as ES/NQ/YM).
+
+Unlike swing, intraday is a genuine frequency change from everything the audited default configuration does. Every daily-denominated constant, resample, or window identified across P0/P1 becomes a live question here. Per spec §45, findings are separated into four buckets (A–D) and the specific mechanisms it names are inspected explicitly within them, rather than repeating the swing table's per-row format.
+
+### 22.A Timeframe-independent principles
+
+These components carry no daily-specific assumption in their own logic — the assumption, if any, lives entirely in what feeds them.
+
+| Component | Principle | Why it is frequency-independent | Evidence |
+| --- | --- | --- | --- |
+| C01/C02 (System/Stage) | Pipeline-of-stages container | No reference to bar size anywhere in the pattern | VERIFIED |
+| C04 (Config) | Parameter store | Values change; the mechanism does not | VERIFIED |
+| R08 (Fitting dates) | Generate refit-period boundaries | Pure calendar-window arithmetic — the one estimation mechanism with no embedded frequency constant found anywhere in the audit | VERIFIED |
+| P04 (Risk overlay) | Portfolio leverage/risk scalar in \[0,1\] | Operates on already-computed positions; no window or annualisation constant in the mechanism itself | VERIFIED (existence); undocumented beyond that |
+| P07 (Capital multiplier) | Scale by available capital | Arithmetic scaling, no time constant | VERIFIED |
+| P08 (Long-only) | Floor negative positions at 0 | A constraint, not a calculation | VERIFIED |
+| E06 (Overrides/limits) | Post-hoc position/trade caps | Applied after position generation regardless of how positions were generated | VERIFIED |
+
+**Transfer status for this group: CONCEPTUALLY PORTABLE — UNTESTED.** "Untested" still applies — no intraday run was performed — but no redesign is implied by anything found in the audit.
+
+### 22.B Daily-frequency assumptions (structural, not incremental)
+
+These are cases where the label DAILY-DEPENDENT applies because the assumption is load-bearing throughout the component, not confined to a constant that could be swapped out.
+
+| Item | Principle at stake | What is daily-dependent | Evidence |
+| --- | --- | --- | --- |
+| A03 (provided rules, as shipped) | Trend/carry signal generation | EWMAC's own docstring: *"Assumes that 'price' is daily data,"* lookbacks specified *"in days"* (`systems/provided/rules/ewmac.py`) | VERIFIED, confirmed this session |
+| E01 (backtest P&L) | Simulate fills and P&L | Single fill at the *next daily close*; §13.6 item 4 already records "no partial fills, queue position, intrabar sequencing or latency in the backtest" (VERIFIED). This is not a parameter to retune — it is a different kind of P&L engine (see §22.C for the repository's own partial alternative) | VERIFIED (`pandl_calculation.py:223-235`; Phase 16 trace) |
+| E03 (production runner) | Generate today's decision from the whole system | Re-runs an entire whole-history `System` once per day and reads the last row (SC4). A 1–5 minute production cadence is a different computational pattern, not a faster version of this one | VERIFIED |
+| **Market impact / cost curve (gap, not a component)** | Cost should scale with trade size and liquidity | §13.6 item 2: *"no market impact and no cost curve... cost per contract is independent of trade size, time of day and liquidity"* (VERIFIED formula). At the trade sizes and frequencies swing/position trading implies, ignoring impact is a safe simplification; at intraday frequency and size it stops being safe. There is no partial mechanism to redesign — this would need to be built from nothing | VERIFIED (absence within search scope; UNVERIFIED beyond it) |
+| **Stops / targets / intrabar exits (gap, not a component)** | Risk-manage a position within its holding period | SC14 (VERIFIED): *"no channel for entry/exit events, stops, targets, holding-period logic or order types"* anywhere in the audited framework. This is the single most consequential gap for intraday use, because stop/target logic is close to a baseline requirement for intraday risk management | VERIFIED |
+
+### 22.C Potentially portable, requires redesign
+
+The largest bucket. Each row names the specific redesign the evidence points to — not a vague "needs work."
+
+| Component / mechanism | Principle (portable) | Concrete redesign implied | Evidence |
+| --- | --- | --- | --- |
+| C03 (Cache) | Memoise pure-function history | Whole-history recompute-per-call is a fundamentally different cost at 1–5 min bars over years of data than at daily bars; per-argument cache keying was already found broken at the base-system level (UD2, TESTED) | INFERRED (scale reasoning) + VERIFIED (UD2) |
+| C05 (SimData) / D01 (price/roll data) | Supply price data to stages | Default path resamples to daily; a documented, partially-built sub-daily path already exists (see below) but is not the default | INFERRED |
+| A01/A02 (TradingRule / Rules stage) | Generic per-instrument signal call | SC4 (vectorised whole-history) and SC9 (zero-as-missing, TESTED in EXP-01 to silently corrupt intended-flat periods) both need redesign for an event-driven, stateful intraday rule | VERIFIED / TESTED |
+| A04–A06, A08 (scaling, cap, combination, FDM application) | Normalise and blend forecasts | A06 in particular: ffill-holds the last non-zero forecast through what should be a flat period — EXP-01 measured this holding a constant +10 forecast across 3,505 intended-flat bars; the `1B` resample in combination is an explicit daily-frequency step (`forecast_combine.py:258-260`, comment confirmed this session) | TESTED (EXP-01) / VERIFIED |
+| R01–R07, R09–R11 (estimation and cost-ceiling machinery) | Estimate scaling, correlation, weights, turnover from history | The repository's **own source code warns against this at high frequency**: the stacking function used for pooled correlation estimation carries the comment *"WON'T WORK WITH HIGH FREQUENCY DATA"* (`syscore/pandas/list_of_df.py`, confirmed this session — DOCUMENTED, in-source). R09's turnover measure additionally resamples to `1B` before differencing, which would discard almost all intraday trading activity if applied unmodified | DOCUMENTED (in-source) + VERIFIED |
+| P01–P03, P05–P06 (position sizing, weight/IDM application, buffering) | Size and smooth positions to a risk target | √256 annualisation (`syscore/dateutils.py:26`, confirmed this session) and the buffer-width formula (0.1 × avg daily position) are both daily-vol conventions; the *principle* — size inversely to volatility, trade only when the deviation exceeds a threshold — is genuinely frequency-general and is arguably the most portable idea in the whole framework once re-derived for the native bar frequency | VERIFIED |
+| E02 (cost model) | Charge configured trading costs | §13.6 items 2–3 (VERIFIED): linear, size-independent, time-of-day-independent, constant-spread-per-instrument. The *charge a cost per fill* principle is portable; the specific linear/constant model is not | VERIFIED |
+| E04 (order generation) | Trade toward target when outside a buffer | The CSV's own Case-B note already flags "no event/exit channel" (VERIFIED); a stop/target/event channel would need to be added, not tuned | VERIFIED |
+| **Fill uncertainty / partial fills / intrabar sequencing (gap, with a partial answer in-repo)** | Model realistic execution | The default vectorised path has none of this (§13.6 item 4). However, the repository already contains a non-default `AccountWithOrderSimulator` with hourly market/limit variants (UD5, VERIFIED) that replaces the vectorised fill inference with a per-row order/fill loop. Phase 15's O-P9-1 test already used this path and found a large, systematic accounting gap (+31,516 USD framework-reported gross vs. −129,875 USD valuing the same 1,843 fills at their own fill prices) — not evidence of look-ahead, but evidence that this alternative path's own accounting needs to be understood and reconciled before it could be trusted as an intraday fill model | VERIFIED (existence) + TESTED (O-P9-1 accounting gap) |
+| **State requirements for path-dependent logic (gap, with existing patterns in-repo)** | Support state that depends on the position's own history (entry price, elapsed time, a trailing stop) | SC4/SC5 make the default rule-evaluation path stateless. But the framework already contains two working stateful, path-dependent loops — P06's buffered-position application and P09's per-date greedy search — demonstrating the architecture *can* support this pattern; neither is currently wired to anything resembling an intraday state need | VERIFIED (existence of P06, P09 as stateful precedent) |
+
+### 22.D Transfer not justified
+
+| Item | Why evidence is insufficient | Evidence |
+| --- | --- | --- |
+| P09 (dynamic optimisation) | Internals only partially read (§12.4); deep review explicitly deferred | UNVERIFIED (depth) |
+| E05 (order stacks / broker) | Phase 19, which would establish latency, fill handling, and reconciliation behaviour, was explicitly SKIPPED — RESOURCE PRIORITY | UNVERIFIED |
+| **Latency (cross-cutting)** | Depends entirely on E05 internals, which are unaudited | UNVERIFIED |
+| A07 (forecast mapping) | The Gaussian-forecast assumption behind it was never tested against actual forecast distributions, daily or otherwise | HYPOTHESIS |
+
+### 22.5 Explicit coverage of the §45 mechanism list
+
+For traceability against the master spec's named inspection list: **volatility targeting** → §22.C (P01, R02); **forecast scaling** → §22.C (A04); **forecast combination** → §22.C (A06, TESTED break); **correlation/diversification** → §22.C (R03/R04/R07, DOCUMENTED in-source warning); **signal vs. position sizing** → §22.A/§22.C split (the sizing *formula* is §22.C, the *signal contract itself* is §21/§22.B via SC9); **buffering** → §22.C (P05/P06); **transaction costs, spread, slippage** → §22.C (E02); **market impact** → §22.B (no mechanism exists to redesign); **latency, fill uncertainty, intrabar sequencing, partial fills** → §22.C/§22.D split (a partial in-repo answer exists via the order simulator, but its own accounting needs reconciliation, and latency specifically depends on unaudited E05); **stops, targets** → §22.B (structural gap, SC14); **state requirements** → §22.C (existing P06/P09 precedent, not currently applied to this need).
+
+No replacement system is designed here, per spec §45.
+
+---
+
+## 23. Swing Operational Readiness
+NOT YET AUDITED (Deliverable 2 pending)
+
+---
+
+## 24. Master Inventory Views (Phase 23)
+
+Generated from `pysystemtrade_framework_inventory.csv` (41 rows + the Signal Contract row) at commit `86fcd72`.
+
+### 24.1 Alpha-independent framework
+
+Every row with `alpha_specific = N` (i.e., every row except A03). This is the entire audited inventory minus the one component that *is* the signal:
+
+SC, C01–C05, D01, A01–A02, A04–A08, R01–R11, P01–P09, E01–E06 — **40 of 41 components**.
+
+**Case A / Case B recap (full reasoning already in §4/§5; not re-derived here):** under Case A (replacement signal satisfies the Signal Contract), every one of these 40 components was found to survive unchanged, with two components UNKNOWN pending audit depth (P09) rather than found to fail. Under Case B (replacement violates the contract — discrete, event-driven, path-dependent), the pattern is different in kind: containers (C01/C02/C04/C05/D01), price-independent cost/broker machinery (E02, E05), and simple constraints (P02/P03/P07/P08) survive unchanged, while the entire forecast-processing chain (A01/A02/A04–A08, R01–R11, P01, P05/P06, E01/E03/E04) survives only *partially*, because the contract's zero-as-missing behaviour (SC9, TESTED) and stateless whole-history evaluation (SC4/SC5) are structurally incompatible with an event-driven signal's own semantics.
+
+### 24.2 Research / estimation framework
+
+R01 (forecast-scalar estimation) · R02 (volatility) · R03 (forecast correlation) · R04 (FDM estimation) · R05 (forecast-weight optimisation) · R06 (instrument-weight optimisation) · R07 (instrument correlation / IDM estimation) · R08 (fitting dates) · R09 (turnover / SR-cost) · R10 (forecast P&L proxy) · R11 (cost-ceiling speed limit).
+
+All eleven default to CONCEPTUALLY PORTABLE — UNTESTED at swing. At intraday, ten of eleven are POTENTIALLY PORTABLE — REQUIRES REDESIGN, with R08 the sole exception (CONCEPTUALLY PORTABLE — UNTESTED, being pure calendar arithmetic with no frequency term). This is the layer where the repository's own documentation most directly warns against high-frequency use (the stacking-function comment underlying R03/R04/R05/R06/R07).
+
+### 24.3 Portfolio / risk framework
+
+P01 (position sizing) · P02 (instrument-weight application) · P03 (IDM application) · P04 (risk overlay) · P05/P06 (buffering) · P07 (capital multiplier) · P08 (long-only) · P09 (dynamic optimisation).
+
+Seven of nine are CONCEPTUALLY PORTABLE — UNTESTED for swing and either CONCEPTUALLY PORTABLE — UNTESTED (P04, P07, P08 — no embedded frequency constant) or POTENTIALLY PORTABLE — REQUIRES REDESIGN (P01, P02/P03, P05/P06 — daily-vol-denominated constants) for intraday. P09 is TRANSFER NOT JUSTIFIED at both frequencies, for audit-depth reasons rather than evidence against it.
+
+### 24.4 Execution framework
+
+E01 (backtest P&L) · E02 (cost model) · E03 (production runner) · E04 (order generation) · E05 (order stacks/broker) · E06 (overrides/limits).
+
+This layer shows the sharpest swing/intraday split in the whole inventory: every row is CONCEPTUALLY PORTABLE — UNTESTED for swing (the default execution model *is* a swing execution model), but E01 and E03 become DAILY-DEPENDENT at intraday specifically because their daily assumption is structural rather than parametric (§22.B). E02 and E04 are POTENTIALLY PORTABLE — REQUIRES REDESIGN. E05 is TRANSFER NOT JUSTIFIED for depth reasons (Phase 19 skipped).
+
+### 24.5 Swing transfer view (grouped by label)
+
+| Label | Count | Components |
+| --- | --- | --- |
+| CONCEPTUALLY PORTABLE — UNTESTED | 39 | SC, C01–C05, D01, A01–A08, R01–R11, P01–P08, E01–E04, E06 |
+| POTENTIALLY PORTABLE — REQUIRES REDESIGN | 0 | — |
+| DAILY-DEPENDENT | 0 | — |
+| TRANSFER NOT JUSTIFIED | 2 | P09, E05 |
+
+### 24.6 Intraday transfer view (grouped by label)
+
+| Label | Count | Components |
+| --- | --- | --- |
+| CONCEPTUALLY PORTABLE — UNTESTED | 8 | C01, C02, C04, R08, P04, P07, P08, E06 |
+| POTENTIALLY PORTABLE — REQUIRES REDESIGN | 24 | SC, C03, C05, D01, A01, A02, A04, A05, A06, A08, R01–R07, R09, R10, R11, P01, P02, P03, P05, P06, E02, E04 |
+| DAILY-DEPENDENT | 4 | A03, E01, E03, and the market-impact/stops-targets gaps noted structurally (not separate CSV rows) |
+| TRANSFER NOT JUSTIFIED | 5 | P09, E05, A07 |
+
+(Row counts across 24.5/24.6 total 41; the market-impact and stops/targets items are structural gaps discussed in §22.B, not separate inventory rows, and are not double-counted.)
+
+---
+
+## 25. Swing vs Intraday Transfer Matrix (Phase 24)
+
+Full matrix, all 41 inventory rows plus the Signal Contract. "What breaks" is left blank where nothing does. No ranking is implied by row order (CSV order preserved).
+
+| Component | Current Implementation | Underlying Principle | Swing Transfer | Intraday Transfer | What Breaks | Evidence Needed |
+| --- | --- | --- | --- | --- | --- | --- |
+| SC Signal Contract | SC1–SC16 (§5) | A forecast is a signed, continuous series known at t | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Zero-as-missing (SC9) and whole-history evaluation (SC4) both assume a non-event-driven, daily-or-slower signal | An intraday-native contract definition and a test signal built against it |
+| C01 System | `basesystem.py` | Compose named calculation stages | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | Nothing beyond what feeds it |
+| C02 Stage | `stage.py` | A named unit of calculation within a System | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | Nothing beyond what feeds it |
+| C03 Cache | `system_cache.py` | Memoise pure-function results | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Whole-history recompute cost at 1–5min row counts; UD2's broken argument-keying | Cache-cost measurement at intraday row counts |
+| C04 Config | `configdata.py`/`defaults.yaml` | Parameter store | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | New parameter values only |
+| C05 SimData | `sim_data.py`/`futures_sim_data.py` | Supply price/vol/carry data | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Default path resamples to daily | A working sub-daily data path through the same stages |
+| D01 Price/roll data | adjusted/multiple prices, roll calendars | Continuous back-adjusted futures series | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Roll dating and back-adjustment validated at daily granularity only | Bar-level validation of roll/back-adjustment logic |
+| A01 TradingRule | `trading_rules.py` | Generic per-instrument signal call | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | SC4 (vectorised) / SC9 (zero=missing, TESTED) | An event-driven, stateful call variant |
+| A02 Rules stage | `forecasting.py` | Invoke rules per instrument, coerce to Series | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Same as A01 | Same as A01 |
+| A03 Provided rules | EWMAC/carry/breakout | Trend/carry signal generation | CONCEPTUALLY PORTABLE — UNTESTED *(alpha, out of scope)* | DAILY-DEPENDENT | Docstring-verified day-denominated lookbacks | Not applicable — this is the signal being replaced |
+| A04 Forecast scaling | `forecast_scale_cap.py` | Normalise forecast magnitude | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Mean-abs scalar estimated on non-zero bars only | Behaviour under a sparse/event signal |
+| A05 Forecast cap | `forecast_scale_cap.py` | Bound extreme conviction | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Cap becomes trivial or distortive for a fixed-size signal | Cap behaviour under non-continuous forecasts |
+| A06 Forecast combination | `forecast_combine.py` | Blend multiple signals | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Ffill holds last non-zero forecast (TESTED, EXP-01); `1B` resample is explicit | An exit-aware combination step |
+| A07 Forecast mapping | `forecast_mapping.py` | Non-linear response curve | CONCEPTUALLY PORTABLE — UNTESTED | TRANSFER NOT JUSTIFIED | Gaussian assumption untested at any frequency | A statistical test of forecast distribution shape |
+| A08 FDM application | `forecast_combine.py` | Scale for imperfect forecast correlation | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Depends on R03/R04 | Same as R03/R04 |
+| R01 Forecast-scalar est. | `forecast_scalar.py` | Estimate the scaling constant | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Estimated on non-zero bars only; interacts with SC9 | Behaviour under sparse signals |
+| R02 Vol estimation | `rawdata.py`/`vol.py` | Estimate risk per unit position | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | 35-day/10-year windows are calendar-day-denominated | Re-derived windows and validation at bar frequency |
+| R03 Forecast-corr est. | `pooled_correlation.py` | Estimate forecast co-movement | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | In-source warning: stacking method won't work with high-frequency data (DOCUMENTED) | A pooling method that survives high-frequency data |
+| R04 FDM estimation | `diversification_multipliers.py` | Calibrate diversification multiplier | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Depends on R03 | Same as R03 |
+| R05 Forecast-weight opt. | `sysquant/optimisation/*` | Fit forecast weights | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | P&L proxy (R10) and correlation inputs (R03) both assume daily | Redesigned P&L proxy and correlation basis |
+| R06 Instrument-weight opt. | `portfolio.py` | Fit instrument weights | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Depends on R07 | Same as R07 |
+| R07 Instrument-corr/IDM est. | `correlation_over_time.py` | Estimate cross-instrument diversification | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Same in-source high-frequency warning applies (subsystem returns pooled the same way) | Same as R03 |
+| R08 Fitting dates | `fitting_dates.py` | Generate refit-period boundaries | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | None identified |
+| R09 Turnover/SR cost | `strategy_functions.py`/`account_costs.py` | Estimate trading activity and its cost | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | `.resample("1B")` before differencing (VERIFIED) would discard intraday activity | A turnover measure at native bar frequency |
+| R10 Forecast P&L proxy | `account_forecast.py` | Approximate forecast-only P&L | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Same daily assumptions as E01 | Same as E01 |
+| R11 Cost-ceiling speed limit | `forecast_combine.py` | Drop rules whose cost is too high | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Inherits R09 | Same as R09 |
+| P01 Position sizing | `positionsizing.py` | Size to a risk target | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | √256 annualisation constant (VERIFIED) | Re-derived annualisation and vol estimator |
+| P02 Instrument-weight appl. | `portfolio.py` | Allocate risk across instruments | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | EWM125 smoothing window; depends on R06 | Same as R06 |
+| P03 IDM application | `portfolio.py` | Scale for cross-instrument diversification | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Depends on R07 | Same as R07 |
+| P04 Risk overlay | `risk_overlay.py` | Portfolio leverage/risk scalar | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — (evidence thinner: undocumented) | Deeper reading of an undocumented, off-by-default module |
+| P05 Buffer calc | `buffering.py` | Avoid over-trading around a noisy target | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Width tied to daily-vol-scaled average position | A buffer width tied to intrabar noise, not daily vol |
+| P06 Buffered position sim | `account_buffering_system.py` | Apply the buffer path-dependently | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Holds last position on NaN inputs; static width | Behaviour under frequent target jumps |
+| P07 Capital multiplier | `account_with_multiplier.py` | Scale by available capital | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | None identified |
+| P08 Long-only | `positionsizing.py` | Floor negative positions at 0 | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | None identified |
+| P09 Dynamic optimisation | `dynamic_small_system_optimise/*` | Integer-position construction, alternative to classic | TRANSFER NOT JUSTIFIED | TRANSFER NOT JUSTIFIED | Own internals only partially read | A full read of the remaining P09 internals |
+| E01 Backtest P&L | `pandl_calculation.py` | Simulate fills and returns | CONCEPTUALLY PORTABLE — UNTESTED | DAILY-DEPENDENT | Single fill at next daily close; no intrabar fills, stops, or targets | A genuinely different fill-simulation engine |
+| E02 Cost model | `pandl_cash_costs.py`/`pandl_SR_cost.py` | Charge trading costs | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | Linear, size- and time-independent, constant spread | A size/liquidity/time-of-day-aware cost model |
+| E03 Prod. system runner | `run_system_classic.py` | Re-run system daily, act on last row | CONCEPTUALLY PORTABLE — UNTESTED | DAILY-DEPENDENT | Whole-history re-run per decision (SC4) | A materially different production architecture, not a faster version of this one |
+| E04 Order generation | `classic_buffered_positions.py` | Trade to buffer edge | CONCEPTUALLY PORTABLE — UNTESTED | POTENTIALLY PORTABLE — REQUIRES REDESIGN | No event/exit channel | A stop/target/event order-generation path |
+| E05 Order stacks/broker | `sysexecution/*`, `sysbrokers/IB/*` | Route and manage live orders | TRANSFER NOT JUSTIFIED | TRANSFER NOT JUSTIFIED | Unaudited (Phase 19 skipped) | The Phase 19 review that was skipped |
+| E06 Overrides/limits | `override.py`/`position_limits.py`/`trade_limits.py` | Post-hoc position/trade caps | CONCEPTUALLY PORTABLE — UNTESTED | CONCEPTUALLY PORTABLE — UNTESTED | — | None identified |
+
+---
+
+## 26. Final Research Framework Synthesis
+NOT YET AUDITED (Deliverable 2 pending)
 
 ## 27. Open Questions / Evidence Gaps / Stage-2 Comparison Questions
 Evidence gaps G1–G8 and unresolved issues U1–U7 are listed in `audit_progress.md` (Phase 7 gap updates: §8.5). Comparison questions: NOT YET AUDITED (P2).
