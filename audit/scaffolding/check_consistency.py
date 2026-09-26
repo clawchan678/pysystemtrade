@@ -224,3 +224,44 @@ chk("progress: P1B COMPLETE — P1B STOP; P2 COMPLETE", "**P1B (Phases 15–19)*
 chk("report: sections 21-27 written, no Deliverable 2 placeholder", all(("## %d. "%n) in R for n in range(21,28)) and "NOT YET AUDITED (Deliverable 2 pending)" not in R and "Comparison questions: NOT YET AUDITED (P2)" not in R)
 chk("O-P18-3 recorded: repo-code property, VERIFIED here, INFERRED version-independent", "**O-P18-3" in R and "**VERIFIED** on this environment" in R and "**INFERRED** to reproduce on other Python 3 versions" in R and "O-P18-3" in P)
 chk("P1B close usage UNRECORDED", "P1B close (session 8): **UNRECORDED**" in P)
+# --- P2 summary-table recounts against the CSV (session 9, operator-requested) ---
+_ID={r["component_id"].split("_")[0]:r for r in rows}
+_LAB={"CP-U":"CONCEPTUALLY PORTABLE — UNTESTED","PP-RR":"POTENTIALLY PORTABLE — REQUIRES REDESIGN","DD":"DAILY-DEPENDENT","TNJ":"TRANSFER NOT JUSTIFIED"}
+def _expand(t):
+    out=[]
+    for x in re.split(r",\s*",t.strip().rstrip(".")):
+        x=x.strip()
+        m=re.fullmatch(r"([A-Z])(\d\d)[–-][A-Z]?(\d\d)",x)
+        if m: out+=[m.group(1)+"%02d"%i for i in range(int(m.group(2)),int(m.group(3))+1)]
+        elif re.fullmatch(r"SC|[ACDEPR]\d\d",x): out.append(x)
+    return out
+def _cells(l): return [c.strip() for c in re.split(r"(?<!\\)\|",l.strip())[1:-1]]
+def _label_table(sec_start,sec_end,col):
+    s=R[R.index(sec_start):R.index(sec_end)]; ok=True; total=0
+    for lab in _LAB.values():
+        ln=[l for l in s.split("\n") if l.startswith("| "+lab+" |")]
+        if len(ln)!=1: return False,"row missing: "+lab
+        _,n,comp=_cells(ln[0])[:3]; ids=_expand(comp); want=sorted(k for k,v in _ID.items() if v[col]==lab)
+        total+=int(n)
+        if not (int(n)==len(ids)==len(want) and sorted(ids)==want): ok=False
+    return ok and total==len(rows),"total %d"%total
+_ok,_m=_label_table("### 24.5","### 24.6","swing_transfer_label"); chk("§24.5 swing view: every label row's count and members match the CSV (%s)"%_m,_ok)
+_ok,_m=_label_table("### 24.6","## 25.","intraday_transfer_label"); chk("§24.6 intraday view: every label row's count and members match the CSV (%s)"%_m,_ok)
+_s241=R[R.index("### 24.1"):R.index("### 24.2")]; _ok=True
+for _lab,_k in (("Y","Y"),("PARTIAL","PARTIAL")):
+    _m=re.search(r"^- "+_lab+r" \((\d+)\): ([^\n]+)$",_s241,re.M); _ids=_expand(_m.group(2)) if _m else []
+    _want=sorted(k for k,v in _ID.items() if v["survives_if_contract_violated"]==_k)
+    _ok&=bool(_m) and int(_m.group(1))==len(_ids) and sorted(_ids)==_want
+_ok&=bool(re.search(r"^- N \(2\): SC \(violated by definition\), A03 \(inapplicable\)\.$",_s241,re.M)) and sorted(k for k,v in _ID.items() if v["survives_if_contract_violated"]=="N")==["A03","SC"]
+chk("§24.1 Case B recap: Y/PARTIAL/N members and counts match the CSV",_ok)
+_s262=R[R.index("### 26.2"):R.index("### 26.3")]; _seen=[]; _ok=True
+for _l in _s262.split("\n"):
+    if not _l.startswith("| ") or _l.startswith("| Framework Layer"): continue
+    _c=_cells(_l)
+    if len(_c)!=7: _ok=False; continue
+    for _i in re.findall(r"\b(SC|[ACDEPR]\d\d)\b",_c[0]):
+        _seen.append(_i); _r=_ID[_i]
+        _sw=re.search(r"Swing (CP-U|PP-RR|DD|TNJ)",_c[5]); _in=re.search(((_i+" ") if _i in ("E03","E04") else "intraday ")+r"(CP-U|PP-RR|DD|TNJ)",_c[5])
+        if not(_c[3].strip("*")==_r["alpha_specific"] and _sw and _in and _LAB[_sw.group(1)]==_r["swing_transfer_label"] and _LAB[_in.group(1)]==_r["intraday_transfer_label"]): _ok=False
+chk("§26.2 framework-layer table: all 41 CSV rows covered exactly once (%d IDs)"%len(_seen), sorted(_seen)==sorted(_ID))
+chk("§26.2 framework-layer table: alpha_specific and swing/intraday labels match the CSV per ID",_ok)
