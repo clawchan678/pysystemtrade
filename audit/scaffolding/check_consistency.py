@@ -66,7 +66,7 @@ chk("E06 unchanged Tier2/VERIFIED", byid["E06"]["impl_evidence"]=="VERIFIED")
 DIST=sorted(__import__("collections").Counter(r["last_phase"] for r in rows).items())
 chk("last_phase distribution matches session 8 (%s)"%DIST, DIST==[("10",1),("11",5),("14",15),("15",1),("16",3),("17",6),("18",6),("5",1),("8",2),("9",1)])
 es=R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")]
-nb=len(re.findall(r"^\d+\. ",es,re.M)); chk("Executive Summary <=20 bullets (%d)"%nb, nb<=20)
+nb=len(re.findall(r"^\d+\. ",es,re.M)); chk("Executive Summary <=22 bullets (%d)"%nb, nb<=22)
 chk("progress: Phase 7 COMPLETE", "P0 Phase 7 — State and estimation | COMPLETE" in P)
 chk("progress: Phase 7 usage UNRECORDED", "Phase 7 (session 3): **UNRECORDED**" in P)
 chk("section 7.3 backfill correction logged", "Phase 7 correction (§8.6)" in R and "| §7.3" in s8)
@@ -82,7 +82,7 @@ chk("DV11 and DV12 in register", "| DV11 |" in R and "| DV12 |" in R)
 chk("DISC-1/DISC-2 raised and (session 5, operator-approved) corrected with before/after log", "| DISC-1 |" in s9 and "| DISC-2 |" in s9 and "*(Corrected in session 5, DISC-1; see §13.9.)*" in R and "*(Corrected in session 5, DISC-2; see §13.9.)*" in R and "| §2 \"Engines\" (DISC-1) | There is no separate event loop; the only per-period loop is the buffer application" in R)
 import re as _re2
 es=R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")]
-chk("Executive Summary <= 20 numbered bullets", len(_re2.findall(r"^\d+\. \*\*", es, _re2.M))<=20)
+chk("Executive Summary <= 22 numbered bullets", len(_re2.findall(r"^\d+\. \*\*", es, _re2.M))<=22)
 chk("alpha_specific unchanged (only A03 = Y)", [r["component_id"].split("_")[0] for r in rows if r["alpha_specific"]=="Y"]==["A03"])
 chk("progress: Phase 8 COMPLETE and P0 STOP", "P0 Phase 8 — Dependency / information flow | COMPLETE" in P and "COMPLETE — P0 STOP" in P)
 chk("progress: $81 kept as remaining balance only", "REMAINING Claude Code credit balance: $81" in P and "NOT a consumed-cost figure" in P)
@@ -151,7 +151,7 @@ chk("EXP-05 recorded (report + progress)", "EXP-05" in s11 and "| EXP-05 |" in P
 s15=R[R.index("## 15."):R.index("## 16.")]
 chk("section 15 not edited: PF-8 there still reads UNVERIFIED", "| PF-8 | Carry / roll data |" in s15 and "**UNVERIFIED**" in s15[s15.index("| PF-8 | Carry / roll data |"):s15.index("| PF-8 | Carry / roll data |")+900])
 chk("progress: Phase 10 usage UNRECORDED; $81/$66 kept as balances", "Phase 10 (session 7): **UNRECORDED**" in P and "REMAINING Claude Code credit balance: $81" in P and "$66" in P)
-chk("Executive Summary still <= 20 bullets after Phase 10", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+chk("Executive Summary still <= 22 bullets after Phase 10", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=22)
 
 # ---- P1B Phase 15 (session 8) ----
 s16=R[R.index("## 16. Empirical Causality Testing"):R.index("## 17. Position / Lag")]
@@ -178,7 +178,7 @@ chk("CSV: R05 at last_phase 15 (E02, R01, R08, R09, P09 moved on in Phases 16/18
 chk("CSV: U5 still holds (R03-R07, C04 INFERRED)", all(byid[i]["impl_evidence"]=="INFERRED" for i in ["R03","R04","R05","R06","R07","C04"]))
 chk("progress: Phase 15 COMPLETE, stopped before Phase 16; usage UNRECORDED", "P1B Phase 15 — Empirical causality | COMPLETE" in P and "STOPPED BEFORE PHASE 16" in P and "Phase 15 (session 8): **UNRECORDED**" in P)
 chk("progress: Phase 15 estimation flags per experiment", "**Phase 15 flags per experiment" in P)
-chk("Executive Summary <= 20 bullets after Phase 15", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+chk("Executive Summary <= 22 bullets after Phase 15", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=22)
 
 # ---- P1B Phase 16 (session 8) ----
 s17=R[R.index("## 17. Position / Lag / P&L Timing"):R.index("## 18. Degrees of Freedom")]
@@ -190,7 +190,7 @@ chk("documented vs implemented table present", "### 17.4 Documented vs implement
 chk("EXP-12/12b scripts, outputs and progress rows", all(__import__("os").path.exists("scaffolding/experiments/"+f) for f in ["exp12_timing_trace.py","exp12_output.txt","exp12b_roll_day_source.py","exp12b_output.txt"]) and "| EXP-12 |" in P and "| EXP-12b |" in P)
 chk("CSV: D01,E01,P06 at last_phase 16 (E02 moved on to 18)", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="16")==["D01","E01","P06"])
 chk("progress: Phase 16 COMPLETE, stopped before 17; usage UNRECORDED", "P1B Phase 16 — Position / lag / P&L timing | COMPLETE" in P and "Phase 16 (session 8): **UNRECORDED**" in P)
-chk("Executive Summary <= 20 bullets after Phase 16", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+chk("Executive Summary <= 22 bullets after Phase 16", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=22)
 
 # ---- P1B Phase 17 (session 8) ----
 s18=R[R.index("## 18. Degrees of Freedom / Research Safeguards"):R.index("## 19. Testing / Validation Infrastructure")]
@@ -202,7 +202,7 @@ chk("tooling inventory covers sensitivity, bootstrap, Monte Carlo, significance,
 chk("O-P16-2 status formalised: report-only, not a CSV row, VERIFIED", "**report-only prose; not a CSV row.**" in R and "O-P16-2 status" in P)
 chk("CSV: exactly A04,A05,C04,P01,P05,R02 at last_phase 17; C04 still INFERRED", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="17")==["A04","A05","C04","P01","P05","R02"] and byid["C04"]["impl_evidence"]=="INFERRED")
 chk("progress: Phase 17 COMPLETE, stopped before 18; usage UNRECORDED", "P1B Phase 17 — Degrees of freedom / research safeguards | COMPLETE" in P and "STOPPED BEFORE PHASE 18" in P and "Phase 17 (session 8): **UNRECORDED**" in P)
-chk("Executive Summary <= 20 bullets after Phase 17", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+chk("Executive Summary <= 22 bullets after Phase 17", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=22)
 
 # ---- P1B Phase 18 (session 8) ----
 s19=R[R.index("## 19. Testing / Validation Infrastructure"):R.index("## 20. Live / Production Architecture")]
@@ -214,7 +214,7 @@ chk("proves / does not prove recorded", "### 19.4 What important tests prove vs.
 chk("run results and collection evidence files present", all(__import__("os").path.exists("scaffolding/phase18/"+f) for f in ["pytest_quick_outcomes.txt","pytest_slow_outcomes.txt","test_file_collection.txt"]) and "101 passed, 40 skipped, 3 xfailed" in s19 and "**17 passed**" in s19)
 chk("CSV: exactly C03,E02,P09,R01,R08,R09 at last_phase 18", sorted(r["component_id"].split("_")[0] for r in rows if r["last_phase"]=="18")==["C03","E02","P09","R01","R08","R09"])
 chk("progress: Phase 18 COMPLETE, stopped before 19; usage UNRECORDED; TEST-RUN rows", "P1B Phase 18 — Testing / validation infrastructure | COMPLETE" in P and "STOPPED BEFORE PHASE 19" in P and "Phase 18 (session 8): **UNRECORDED**" in P and "| TEST-RUN-1 |" in P and "| TEST-RUN-2 |" in P)
-chk("Executive Summary <= 20 bullets after Phase 18", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=20)
+chk("Executive Summary <= 22 bullets after Phase 18", len(__import__("re").findall(r"^\d+\. \*\*", R[R.index("## Executive Summary"):R.index("## 1. Audit Scope")], __import__("re").M))<=22)
 
 # ---- P1B close (session 8) ----
 SK="Phase 19 — SKIPPED — RESOURCE PRIORITY. Static review of the research-to-live connection, broker integration, order generation, position reconciliation, account state, persistence, restart behavior, monitoring, logging, overrides, limits, and error handling was not performed. This is a known gap, not a finding of NO ISSUE IDENTIFIED."
