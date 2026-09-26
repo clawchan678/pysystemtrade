@@ -194,7 +194,7 @@ Determined only from pysystemtrade @ 8958c49. It answers: *what must a rule sati
 | Turnover / SR cost, cost ceiling, forecast P&L proxy | Survive unchanged | These are generic in forecast units. |
 | Position sizing, weights, IDM, risk overlay, buffers, buffered path, capital, long-only | Survive unchanged | These depend only on forecast units and price vol. |
 | Backtest P&L, cost model, production runner, order generation, stacks, broker | Survive unchanged | Downstream of positions. |
-| Dynamic optimisation (P09) | UNKNOWN | Not audited. |
+| Dynamic optimisation (P09) | Y | Consumes classic notional positions unchanged (per Phase 11, §12.4); set in the CSV at session 5, see §13.9. (Corrected in P2 Deliverable 2 review; see DISC-4.) |
 
 **Case B: the replacement violates the contract** (a discrete, event-driven, path-dependent signal with its own entry/exit logic, e.g. +1/−1 on entry, 0 when flat, exits driven by stops or targets). `swap_evidence` = INFERRED unless stated otherwise; EXP-01 is TESTED for the zero-handling mechanism only.
 
@@ -216,7 +216,7 @@ Determined only from pysystemtrade @ 8958c49. It answers: *what must a rule sati
 | Backtest P&L (E01) | Survives partially | Next-close fill only; no intrabar stop or target fills. |
 | Cost model (E02), order stacks and broker (E05) | Survive unchanged | Downstream of quantities. |
 | Production runner / order generation (E03/E04) | Survive partially | They propagate the same upstream semantics; trade-to-edge is hard-coded. |
-| Dynamic optimisation (P09) | UNKNOWN | Not audited. |
+| Dynamic optimisation (P09) | PARTIAL | Inherits upstream forecast semantics (SC9/SC10); has its own TE buffer (§12.4). (Corrected in P2 Deliverable 2 review; see DISC-4.) |
 
 ## 6. Master Framework Inventory
 
@@ -2433,7 +2433,12 @@ Every row with `alpha_specific = N` (i.e., every row except A03). This is the en
 
 SC, C01–C05, D01, A01–A02, A04–A08, R01–R11, P01–P09, E01–E06 — **40 of 41 components**.
 
-**Case A / Case B recap (full reasoning already in §4/§5; not re-derived here):** under Case A (replacement signal satisfies the Signal Contract), every one of these 40 components was found to survive unchanged, with two components UNKNOWN pending audit depth (P09) rather than found to fail. Under Case B (replacement violates the contract — discrete, event-driven, path-dependent), the pattern is different in kind: containers (C01/C02/C04/C05/D01), price-independent cost/broker machinery (E02, E05), and simple constraints (P02/P03/P07/P08) survive unchanged, while the entire forecast-processing chain (A01/A02/A04–A08, R01–R11, P01, P05/P06, E01/E03/E04) survives only *partially*, because the contract's zero-as-missing behaviour (SC9, TESTED) and stateless whole-history evaluation (SC4/SC5) are structurally incompatible with an event-driven signal's own semantics.
+**Case A / Case B recap (full reasoning already in §4/§5; not re-derived here):** under Case A (replacement signal satisfies the Signal Contract), all 40 of these components have survives_if_contract_met = Y in the CSV, including P09 (set in session 5, Phases 11–12, per §13.9). P09's own audit depth remains limited (see §21.3's TRANSFER NOT JUSTIFIED verdict), but that is a separate question from its Case A survival value. Under Case B (replacement violates the contract), per the CSV (survives_if_contract_violated):
+- Y (14): C01, C02, C04, C05, D01, R02, R08, P02, P04, P07, P08, E02, E05, E06.
+- PARTIAL (25): C03, A01, A02, A04-A08, R01, R03-R07, R09-R11, P01, P03, P05, P06, P09, E01, E03, E04.
+- N (2): SC (violated by definition), A03 (inapplicable).
+
+The partial set changes because exact zeros are erased and the prior forecast is held through intended-flat periods (SC9/SC10, TESTED by EXP-01); whole-history, stateless evaluation gives no feedback of position or fills to the rule (SC4/SC5); and there is no channel for entry/exit events, stops or targets (SC14).
 
 ### 24.2 Research / estimation framework
 
@@ -2671,18 +2676,13 @@ Label abbreviations in this table: CP-U = CONCEPTUALLY PORTABLE — UNTESTED; PP
 
 Row coverage: the 29 table rows cover all 41 CSV rows (SC; C01–C05; D01; A01–A08; R01–R11; P01–P09; E01–E06). Where rows are grouped, every grouped ID carries the same labels for that column except where the cell says otherwise (E03/E04).
 
-### 26.3 Differences between the CSV and earlier report text (recorded, not edited)
+### 26.3 Differences between the CSV and earlier report text (corrected in the P2 Deliverable 2 review)
 
-**The CSV is canonical for component fields** (spec §32). Three places in earlier text differ from it. None was edited here.
+**The CSV is canonical for component fields** (spec §32). The Deliverable 2 recount found earlier text that differed from it. Both corrections are now applied:
+- **Correction A, §24.1 recap** (a transcription error in Deliverable 1 against CSV data that was already correct): the Case A sentence now records P09 as Y in the CSV, and the Case B recap now lists the CSV's Y (14) / PARTIAL (25) / N (2) sets. Logged in `audit_progress.md` (session 9).
+- **Correction B, §5 Case A/B tables** (documentation lag since session 5): the P09 rows now read Y and PARTIAL, as set in the CSV in session 5 (§13.9). Recorded as **DISC-4** in the divergence register.
 
-- **P09 under Case A.** §5's Case A table (Phase 4) and §24.1 say P09 is UNKNOWN. The CSV has `survives_if_contract_met = Y`, `swap_evidence = INFERRED`, set in Phases 11–12 after the P09 core was read (Executive Summary 20; §13.9). §24.1 also says "two components UNKNOWN pending audit depth (P09)" but names only one.
-- **§24.1's Case B recap does not match the CSV:**
-  - it lists P03 among components surviving unchanged, but the CSV has `PARTIAL`;
-  - it includes all of R01–R11 in the "partially" group, but the CSV has R02 and R08 as `Y`;
-  - it omits P04 and E06, which the CSV has as `Y`.
-- **§24.1's count "40 of 41 components"** is correct against `alpha_specific` (40 N, 1 Y).
-
-Item 7 above uses the CSV values. These differences are raised for operator review, like the earlier DISC items.
+§24.1's count "40 of 41 components" was already correct against `alpha_specific` (40 N, 1 Y).
 
 ## 27. Open Questions / Evidence Gaps / Stage-2 Comparison Questions
 
@@ -2729,7 +2729,6 @@ Each item is listed once, under the category that best describes *why* it is unr
 | Unresolved code ambiguity | §3 (v) | The instrument-code match takes the last matching positional argument, while the docstring says the first | §3 |
 | Unresolved code ambiguity | SC5 edge | Any stage method could in principle be named as rule data, which could feed state back into rules (INFERRED) | §5 SC5 |
 | Unresolved code ambiguity | R1 vs R2 roll consistency | Research and live roll mechanisms differ and were not compared on data (INFERRED) | §11.2 |
-| Unresolved code ambiguity | CSV vs report text on P09 Case A and the §24.1 Case B recap | Recorded in §26.3 for operator review | §26.3 |
 
 Not in this table: operational items that are not evidence about pysystemtrade. U2, usage/cost not recorded, is kept in `audit_progress.md`.
 
@@ -2830,3 +2829,4 @@ These questions come from the verified inventory (spec §50). They are for a lat
 | UD3 | (undocumented) | `positionLimit.minimum_position_limit` returns `other.no_limit` (a bool, `False`) when the instrument has no limit but the instrument-strategy does; reaches only the dynamic-optimised live strategy's maximum-position input (`controls.py:578-592`; `dynamic_optimised_positions.py:289-322`). Downstream numeric treatment INFERRED | VERIFIED (return value) |
 | UD4 | (undocumented) | Commission = **max**(per-block × \|qty\|, per-trade, percentage × value), not a sum (`instruments.py:365-373`); the docs list the three types without the combination rule (searched the `backtesting.md` costs section and `instruments.md` for max/maximum/largest) | VERIFIED |
 | UD5 | (undocumented) | The order-simulator accounts stage `AccountWithOrderSimulator` and its hourly market/limit variants (`systems/accounts/order_simulator/*`; examples `systems/provided/example/{daily,hourly}_with_order_simulation*`) replace vectorised fill inference with a per-row order/fill loop and bypass buffering. `docs/*.md` searched for `order simulat`, `order_simulat`, `vectorised`, `vectorized`, `event.driven`, `event driven`: no hits (Phase 9, §10.4) | VERIFIED |
+| DISC-4 | §5's Case A/B tables (Phase 4) recorded P09 as UNKNOWN / Not audited | Phase 11 (§12.4) read P09's core and the CSV was updated accordingly in session 5 (survives_if_contract_met = Y, survives_if_contract_violated = PARTIAL, §13.9), but §5's text was never back-ported | Found during P2 Deliverable 2 review (§26.3); §5 corrected |
