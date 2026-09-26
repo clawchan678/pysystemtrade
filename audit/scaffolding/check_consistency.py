@@ -31,7 +31,7 @@ chk("transfer labels assessed (P2 Deliverable 1): no NOT YET ASSESSED; all in th
 for k in ["DV7","DV8","DV9"]: chk(k+" in divergence register", ("| %s |"%k) in R)
 chk("progress: Phase 5 COMPLETE", "P0 Phase 5 — Master inventory (tiers + Tier 1 cards) | COMPLETE" in P)
 NT=P[P.index("**Exact next task:**"):P.index("## Unresolved issues")]
-chk("progress: next task = STOP / await operator review of P2", "**Exact next task:** **STOP. Await operator review of P2**" in P)
+chk("progress: next task = NONE — audit complete (P2 reviewed and closed)", "**Exact next task:** **NONE — audit complete.**" in P and "P2 reviewed and closed (session 9)" in R[:2000])
 chk("progress: usage NOT RECORDED", "NOT RECORDED" in P)
 chk("report status line: P1A COMPLETE; P1B COMPLETE; Phase 19 skipped", "P1A COMPLETE" in R[:2000] and "Phase 15 §16" in R[:2000] and "Phase 18 §19" in R[:2000] and "P1B COMPLETE — P1B STOP" in R[:2000] and "Phase 19 SKIPPED — RESOURCE PRIORITY" in R[:2000])
 chk("progress mentions 40 rows consistent", "16 cards / 26 IDs" in P)

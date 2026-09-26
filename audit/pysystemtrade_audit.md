@@ -4,7 +4,7 @@ Audited commit: `pst-group/pysystemtrade` @ **`8958c49`** (`8958c49c38b1e4a8c07f
 All citations below are `path:lines @ 8958c49` unless stated otherwise.
 Evidence tags: VERIFIED / DOCUMENTED / INFERRED / HYPOTHESIS / UNVERIFIED (spec §12). The counterfactual tag `swap_evidence` is kept separate (spec §13).
 
-Status: **P0 complete (Phases 1–8, all approved). P1A COMPLETE (Phases 9–14). P1B COMPLETE — P1B STOP** (session 8, operator-authorised phase by phase: Phase 15 §16 (PF-11 wording corrected, §16.12), Phase 16 §17, Phase 17 §18, Phase 18 §19; **Phase 19 SKIPPED — RESOURCE PRIORITY**, §20). **P2 COMPLETE** (session 9: Phases 20, 21, 23, 24 → §21, §22, §24, §25; Phases 22, 25, 26 → §23, §26, §27). Executive Summary current as of P2 close (bullets 21–22). Next: STOP; operator review of P2.
+Status: **P0 complete (Phases 1–8, all approved). P1A COMPLETE (Phases 9–14). P1B COMPLETE — P1B STOP** (session 8, operator-authorised phase by phase: Phase 15 §16 (PF-11 wording corrected, §16.12), Phase 16 §17, Phase 17 §18, Phase 18 §19; **Phase 19 SKIPPED — RESOURCE PRIORITY**, §20). **P2 COMPLETE** (session 9: Phases 20, 21, 23, 24 → §21, §22, §24, §25; Phases 22, 25, 26 → §23, §26, §27). Executive Summary current as of P2 close (bullets 21–22). P2 reviewed and closed (session 9). Next: none — audit complete.
 
 ---
 
